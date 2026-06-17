@@ -24,6 +24,7 @@ impl/
 # ======================
 src/APP/bin/
 src/APP/obj/
+src/APP/publish/
 *.suo
 
 # ======================

@@ -373,7 +373,7 @@ module hdb3_top (
             // nop
         end
         else if (m_state == M_DEC_RUN && dec_bit_vld) begin
-            sym_buf[m_wr1] <= {7'b0, dec_bit};
+            // sym_buf writes are handled in the main FSM.
         end
     end
 
@@ -382,40 +382,42 @@ module hdb3_top (
     // ============================================================
     reg [24:0] heartbeat_cnt;
     reg        led0;
-    reg        led_rx_seen;
-    reg        led_cmd_ok;
-    reg        led_cmd_err;
-    reg        led_busy;
-    reg        led_uart_tx_busy;
-    reg        led_dac_playing;
-    reg        led_resp_done;
+    reg [23:0] led_rx_cnt;
+    reg [23:0] led_cmd_ok_cnt;
+    reg [23:0] led_cmd_err_cnt;
+    reg [23:0] led_resp_cnt;
 
-    assign led = {~led_resp_done, ~led_dac_playing, ~led_uart_tx_busy, ~led_busy,
-                  ~led_cmd_err, ~led_cmd_ok, ~led_rx_seen, led0};
+    assign led = {led_resp_cnt != 24'd0, dac_playing, tx_busy, (m_state != M_IDLE),
+                  led_cmd_err_cnt != 24'd0, led_cmd_ok_cnt != 24'd0,
+                  led_rx_cnt != 24'd0, led0};
 
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n) begin
-            led_rx_seen      <= 1'b0;
-            led_cmd_ok       <= 1'b0;
-            led_cmd_err      <= 1'b0;
-            led_busy         <= 1'b0;
-            led_uart_tx_busy <= 1'b0;
-            led_dac_playing  <= 1'b0;
-            led_resp_done    <= 1'b0;
+            led_rx_cnt      <= 24'd0;
+            led_cmd_ok_cnt  <= 24'd0;
+            led_cmd_err_cnt <= 24'd0;
+            led_resp_cnt    <= 24'd0;
         end
         else begin
             if (rx_done)
-                led_rx_seen <= 1'b1;
-            if (cmd_done)
-                led_cmd_ok <= 1'b1;
-            if (cmd_error || m_state == M_ERR_SEND)
-                led_cmd_err <= 1'b1;
-            if (resp_done)
-                led_resp_done <= 1'b1;
+                led_rx_cnt <= 24'd12_500_000;
+            else if (led_rx_cnt != 24'd0)
+                led_rx_cnt <= led_rx_cnt - 24'd1;
 
-            led_busy         <= (m_state != M_IDLE);
-            led_uart_tx_busy <= tx_busy;
-            led_dac_playing  <= dac_playing;
+            if (cmd_done)
+                led_cmd_ok_cnt <= 24'd12_500_000;
+            else if (led_cmd_ok_cnt != 24'd0)
+                led_cmd_ok_cnt <= led_cmd_ok_cnt - 24'd1;
+
+            if (cmd_error || m_state == M_ERR_SEND)
+                led_cmd_err_cnt <= 24'd12_500_000;
+            else if (led_cmd_err_cnt != 24'd0)
+                led_cmd_err_cnt <= led_cmd_err_cnt - 24'd1;
+
+            if (resp_done)
+                led_resp_cnt <= 24'd12_500_000;
+            else if (led_resp_cnt != 24'd0)
+                led_resp_cnt <= led_resp_cnt - 24'd1;
         end
     end
 
@@ -432,9 +434,9 @@ module hdb3_top (
     // LED0 心跳: 低有效
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n)
-            led0 <= 1'b1;
+            led0 <= 1'b0;
         else
-            led0 <= (heartbeat_cnt < 25'd12_500_000) ? 1'b0 : 1'b1;
+            led0 <= heartbeat_cnt[24];
     end
 
     // Blank the board 7-segment display through its 74HC595 chain. If these

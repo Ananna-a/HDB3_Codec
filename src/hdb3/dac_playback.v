@@ -2,7 +2,10 @@
 // dac_playback.v - dual-channel DAC waveform playback
 // =============================================================================
 // Channel 0 stores HDB3 symbols. Channel 1 stores decoded bits.
-// Symbol playback rate: 50 MHz / 500 = 100 kHz.
+// Symbol playback rate: 50 MHz / 500 = 100 ksym/s.
+// DAC sample clock: 200 kHz, two samples per symbol.
+// CH0 is rendered as RZ: first half pulse, second half zero.
+// CH1 keeps the decoded bit value for the full symbol width.
 // =============================================================================
 
 module dac_playback (
@@ -28,6 +31,10 @@ module dac_playback (
     output wire        playing_out
 );
 
+    localparam [7:0] DAC_ZERO = 8'h80;
+    localparam [7:0] DAC_POS  = 8'h00;
+    localparam [7:0] DAC_NEG  = 8'hFF;
+
     assign playing_out = playing;
 
     wire [7:0] rd_data0;
@@ -35,9 +42,26 @@ module dac_playback (
     reg [10:0] rd_addr0;
     reg [10:0] rd_addr1;
     reg        playing;
-    reg [8:0]  tick_cnt;
+    reg [7:0]  sample_cnt;
+    reg        rz_phase;
 
-    wire sym_tick = (tick_cnt == 9'd499);
+    wire half_tick = (sample_cnt == 8'd249);
+    wire addr_prep_tick = (sample_cnt == 8'd248);
+
+    function [7:0] hdb3_symbol_to_dac;
+        input [7:0] sym;
+        begin
+            case (sym)
+                8'h01,
+                8'h03,
+                8'h05: hdb3_symbol_to_dac = DAC_POS;
+                8'h02,
+                8'h04,
+                8'h06: hdb3_symbol_to_dac = DAC_NEG;
+                default: hdb3_symbol_to_dac = DAC_ZERO;
+            endcase
+        end
+    endfunction
 
     dac_wave_ram u_ram0 (
         .clk(clk),
@@ -61,16 +85,20 @@ module dac_playback (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            tick_cnt <= 9'd0;
-            DA_Clk   <= 1'b0;
+            sample_cnt <= 8'd0;
+            rz_phase   <= 1'b0;
+            DA_Clk     <= 1'b0;
         end
         else if (playing) begin
-            tick_cnt <= sym_tick ? 9'd0 : tick_cnt + 9'd1;
-            DA_Clk   <= (tick_cnt >= 9'd250);
+            sample_cnt <= half_tick ? 8'd0 : sample_cnt + 8'd1;
+            if (half_tick)
+                rz_phase <= ~rz_phase;
+            DA_Clk <= (sample_cnt >= 8'd125);
         end
         else begin
-            tick_cnt <= 9'd0;
-            DA_Clk   <= 1'b0;
+            sample_cnt <= 8'd0;
+            rz_phase   <= 1'b0;
+            DA_Clk     <= 1'b0;
         end
     end
 
@@ -90,7 +118,7 @@ module dac_playback (
             rd_addr0 <= 11'd0;
             rd_addr1 <= 11'd0;
         end
-        else if (playing && sym_tick) begin
+        else if (playing && rz_phase && addr_prep_tick) begin
             rd_addr0 <= (play_len0 <= 11'd1 || rd_addr0 == play_len0 - 11'd1) ? 11'd0 : rd_addr0 + 11'd1;
             rd_addr1 <= (play_len1 <= 11'd1 || rd_addr1 == play_len1 - 11'd1) ? 11'd0 : rd_addr1 + 11'd1;
         end
@@ -98,26 +126,16 @@ module dac_playback (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            DA0_Data <= 8'h80;
-            DA1_Data <= 8'h80;
+            DA0_Data <= DAC_ZERO;
+            DA1_Data <= DAC_ZERO;
         end
         else if (!playing) begin
-            DA0_Data <= 8'h80;
-            DA1_Data <= 8'h80;
+            DA0_Data <= DAC_ZERO;
+            DA1_Data <= DAC_ZERO;
         end
-        else begin
-            case (rd_data0)
-                8'h00: DA0_Data <= 8'h80;
-                8'h01,
-                8'h03,
-                8'h05: DA0_Data <= 8'hFF;
-                8'h02,
-                8'h04,
-                8'h06: DA0_Data <= 8'h00;
-                default: DA0_Data <= 8'h80;
-            endcase
-
-            DA1_Data <= (rd_data1 == 8'h00) ? 8'h80 : 8'hFF;
+        else if (sample_cnt == 8'd0) begin
+            DA0_Data <= rz_phase ? DAC_ZERO : hdb3_symbol_to_dac(rd_data0);
+            DA1_Data <= (rd_data1 == 8'h00) ? DAC_ZERO : DAC_POS;
         end
     end
 

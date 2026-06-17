@@ -64,6 +64,7 @@ namespace HDB3_App.Models
                             result.Add((byte)Hdb3Symbol.Zero);
                             result.Add((byte)Hdb3Symbol.Zero);
                             result.Add(PulseToViolation(vPol));
+                            amiPol = !vPol;
                             lastPol = vPol;
                         }
                         else  // 奇数脉冲 → 000V
@@ -73,6 +74,7 @@ namespace HDB3_App.Models
                             result.Add((byte)Hdb3Symbol.Zero);
                             result.Add((byte)Hdb3Symbol.Zero);
                             result.Add(PulseToViolation(vPol));
+                            amiPol = !vPol;
                             lastPol = vPol;
                         }
                         delayCnt = 0;

@@ -1,18 +1,18 @@
 // =============================================================================
-// hdb3_top.v — HDB3 编解码器 FPGA 顶层模块
+// hdb3_top.v - HDB3 codec FPGA top module
 // =============================================================================
-// 功能: 例化所有子模块, 主控状态机调度命令/编码/解码/DAC/应答全流程
+// Instantiates communication, codec, DAC playback, response, and debug logic.
 //
-// 数据流 (编码): RX → parser → encoder → DAC0 + 回环decoder → DAC1 → 应答
-// 数据流 (解码): RX → parser → decoder → DAC1 + DAC0(输入符号显示) → 应答
+// Encode path: RX -> parser -> encoder -> DAC0 + loop decoder -> DAC1 -> response
+// Decode path: RX -> parser -> decoder -> DAC1 + DAC0 input-symbol view -> response
 // =============================================================================
 
 module hdb3_top (
-    input  wire       clk_50m,          // 50MHz 系统时钟
-    input  wire       rst_n,            // 异步复位 (低有效)
+    input  wire       clk_50m,          // 50MHz system clock
+    input  wire       rst_n,            // async reset, active low
 
-    input  wire       uart_rx,          // UART 接收引脚
-    output wire       uart_tx,          // UART 发送引脚
+    input  wire       uart_rx,          // UART RX pin
+    output wire       uart_tx,          // UART TX pin
 
     output wire [7:0] DA0_Data,         // DAC channel A
     output wire       DA0_Clk,
@@ -29,7 +29,7 @@ module hdb3_top (
     localparam [7:0] MAX_BIT_BYTES   = 8'd8;
 
     // ============================================================
-    // 内部连线
+    // Internal wires
     // ============================================================
     // UART
     wire [7:0] rx_byte;
@@ -42,8 +42,8 @@ module hdb3_top (
     // encoder
     reg        enc_start;
     reg [10:0] enc_total_bits;
-    wire [7:0] enc_addr;             // encoder 请求的字节地址
-    reg  [7:0] enc_byte;            // 顶层提供的字节数据
+    wire [7:0] enc_addr;             // byte address requested by encoder
+    reg  [7:0] enc_byte;             // byte data supplied by top
     wire [2:0] enc_sym;
     wire       enc_sym_vld, enc_done;
 
@@ -72,14 +72,14 @@ module hdb3_top (
     wire       resp_done;
 
     // ============================================================
-    // 内部存储数组 (仅顶层拥有数组, 端口全部扁平)
+    // Internal storage arrays owned by the top module
     // ============================================================
     reg [7:0] payload_buf [0:63];    // received payload, limited by PC app
     reg [7:0] sym_buf [0:63];        // response/DAC symbol buffer
     reg [7:0] bit_buf [0:7];         // packed encode bits, 64 bits max
 
     // ============================================================
-    // 子模块例化
+    // Submodule instances
     // ============================================================
     uart_byte_rx #(.CLK_FREQ(50_000_000), .BAUD_RATE(115200))
     u_rx (.clk(clk_50m), .rst_n(rst_n), .uart_rx(uart_rx), .data_byte(rx_byte), .rx_done(rx_done));
@@ -132,7 +132,7 @@ module hdb3_top (
 
     assign resp_payload_data = sym_buf[resp_payload_addr];
     // ============================================================
-    // payload 接收: 从 parser 的逐字节输出存入内部数组
+    // Store parser payload bytes into payload_buf
     // ============================================================
     reg [7:0] pl_idx;
     always @(posedge clk_50m or negedge rst_n) begin
@@ -147,14 +147,14 @@ module hdb3_top (
     end
 
     // ============================================================
-    // encoder bit_buf_byte 驱动
+    // Drive encoder bit byte input
     // ============================================================
     always @(*) begin
         enc_byte = bit_buf[enc_addr];
     end
 
     // ============================================================
-    // 主控状态机
+    // Main control FSM
     // ============================================================
     localparam M_IDLE        = 4'd0;
     localparam M_ENC_PREP    = 4'd1;
@@ -246,10 +246,10 @@ module hdb3_top (
                 end
 
                 M_ENC_PREP: begin
-                    // 编码准备: payload[0..1] = bit_cnt, [2..] = bit_data
+                    // Encode prep: payload[0..1] = bit_cnt, payload[2..] = bit data.
                     resp_cmd   <= 8'h01;
                     dac_stop   <= 1'b1;
-                    // 将 payload 中 bit_data 复制到 bit_buf
+                    // Copy payload bit data into bit_buf.
                     if (m_idx < parsed_len - 8'd2) begin
                         bit_buf[m_idx] <= payload_buf[m_idx + 2];
                         m_idx <= m_idx + 11'd1;
@@ -277,14 +277,16 @@ module hdb3_top (
                 end
 
                 M_ENC_LOOP: begin
-                    if (!dec_start && m_idx == 11'd0) begin
+                    if (m_idx == 11'd0) begin
                         dec_start      <= 1'b1;
                         dec_total_syms <= m_sym_cnt;
-                        m_idx          <= 11'd1;  // 标记已启动
+                        m_idx          <= 11'd1;
                     end
-                    // 逐符号送入 decoder
-                    if (m_idx > 0 && m_idx <= m_sym_cnt) begin
-                        dec_sym_in   <= sym_buf[m_idx - 1][2:0];
+                    else if (m_idx == 11'd1) begin
+                        m_idx <= 11'd2;
+                    end
+                    else if (m_idx <= m_sym_cnt + 11'd1) begin
+                        dec_sym_in   <= sym_buf[m_idx - 11'd2][2:0];
                         dec_sym_vld  <= 1'b1;
                         m_idx        <= m_idx + 11'd1;
                     end
@@ -319,8 +321,11 @@ module hdb3_top (
                 end
 
                 M_DEC_RUN: begin
-                    if (m_idx < parsed_len) begin
-                        dec_sym_in   <= payload_buf[m_idx][2:0];
+                    if (m_idx == 11'd0) begin
+                        m_idx <= 11'd1;
+                    end
+                    else if (m_idx <= {3'b0, parsed_len}) begin
+                        dec_sym_in   <= payload_buf[m_idx - 11'd1][2:0];
                         dec_sym_vld  <= 1'b1;
                         m_idx        <= m_idx + 11'd1;
                     end
@@ -328,6 +333,7 @@ module hdb3_top (
                         dac_wr1_en   <= 1'b1;
                         dac_wr1_addr <= m_wr1;
                         dac_wr1_data <= {7'b0, dec_bit};
+                        sym_buf[m_wr1] <= {7'b0, dec_bit};
                         m_wr1        <= m_wr1 + 11'd1;
                     end
                     if (dec_done) begin
@@ -366,7 +372,7 @@ module hdb3_top (
     end
 
     // ============================================================
-    // 解码模式: 收集解码 bit 到 sym_buf (用于应答)
+    // Decode-mode bit collection placeholder; writes are handled in the main FSM.
     // ============================================================
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n) begin
@@ -378,7 +384,7 @@ module hdb3_top (
     end
 
     // ============================================================
-    // 心跳灯
+    // Heartbeat and debug LEDs
     // ============================================================
     reg [24:0] heartbeat_cnt;
     reg        led0;
@@ -421,7 +427,7 @@ module hdb3_top (
         end
     end
 
-    // 心跳计数器: 50MHz / 25000000 = 2Hz 翻转
+    // Heartbeat counter: 50MHz / 25000000 = 2Hz toggle.
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n)
             heartbeat_cnt <= 25'd0;
@@ -431,7 +437,7 @@ module hdb3_top (
             heartbeat_cnt <= heartbeat_cnt + 25'd1;
     end
 
-    // LED0 心跳: 低有效
+    // LED0 heartbeat.
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n)
             led0 <= 1'b0;

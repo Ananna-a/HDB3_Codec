@@ -42,6 +42,7 @@ module dac_playback (
     reg [10:0] rd_addr0;
     reg [10:0] rd_addr1;
     reg        playing;
+    reg [1:0]  prime_wait;
     reg [7:0]  sample_cnt;
     reg        rz_phase;
 
@@ -105,18 +106,26 @@ module dac_playback (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             playing  <= 1'b0;
+            prime_wait <= 2'd0;
             rd_addr0 <= 11'd0;
             rd_addr1 <= 11'd0;
         end
         else if (stop) begin
             playing  <= 1'b0;
+            prime_wait <= 2'd0;
             rd_addr0 <= 11'd0;
             rd_addr1 <= 11'd0;
         end
         else if (load_done) begin
-            playing  <= 1'b1;
+            playing  <= 1'b0;
+            prime_wait <= 2'd2;
             rd_addr0 <= 11'd0;
             rd_addr1 <= 11'd0;
+        end
+        else if (prime_wait != 2'd0) begin
+            prime_wait <= prime_wait - 2'd1;
+            if (prime_wait == 2'd1)
+                playing <= 1'b1;
         end
         else if (playing && rz_phase && addr_prep_tick) begin
             rd_addr0 <= (play_len0 <= 11'd1 || rd_addr0 == play_len0 - 11'd1) ? 11'd0 : rd_addr0 + 11'd1;

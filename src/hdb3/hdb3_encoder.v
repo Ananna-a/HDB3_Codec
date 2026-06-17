@@ -138,17 +138,20 @@ module hdb3_encoder (
                                 if (last_pol == 1'b0) begin
                                     subst_buf[0] <= SYM_NB;
                                     subst_buf[3] <= SYM_NV;
+                                    ami_pol      <= 1'b0;
                                     last_pol     <= 1'b1;
                                 end
                                 else begin
                                     subst_buf[0] <= SYM_PB;
                                     subst_buf[3] <= SYM_PV;
+                                    ami_pol      <= 1'b1;
                                     last_pol     <= 1'b0;
                                 end
                             end
                             else begin
                                 subst_buf[0] <= SYM_0;
                                 subst_buf[3] <= (last_pol == 1'b0) ? SYM_PV : SYM_NV;
+                                ami_pol      <= ~last_pol;
                             end
 
                             subst_buf[1] <= SYM_0;

@@ -27,7 +27,7 @@ namespace HDB3_App.ViewModels
 
     public class MainViewModel : INotifyPropertyChanged
     {
-        private const int MaxFrameSymbols = 255;
+        private const int MaxFrameSymbols = 64;
         private const int MinRandomBits = 16;
         private const int MaxRandomBits = 20;
 

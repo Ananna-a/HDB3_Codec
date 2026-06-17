@@ -19,11 +19,14 @@ module hdb3_top (
     output wire [7:0] DA1_Data,         // DAC channel B
     output wire       DA1_Clk,
 
-    output wire [7:0] led,              // Board LEDs, active low
+    output wire [7:0] led,              // Board LEDs
     output reg        sh_cp,            // 7-seg 74HC595 shift clock
     output reg        st_cp,            // 7-seg 74HC595 latch clock
     output reg        ds                // 7-seg 74HC595 serial data
 );
+
+    localparam [7:0] MAX_FRAME_ITEMS = 8'd64;
+    localparam [7:0] MAX_BIT_BYTES   = 8'd8;
 
     // ============================================================
     // 内部连线
@@ -61,8 +64,8 @@ module hdb3_top (
     // response_tx
     reg        resp_start;
     reg  [7:0] resp_cmd, resp_status, resp_len;
-    reg  [7:0] resp_wr_data, resp_wr_addr;
-    reg        resp_wr_en;
+    wire [7:0] resp_payload_addr;
+    wire [7:0] resp_payload_data;
     wire       resp_send_en, tx_done, tx_busy;
     wire [7:0] resp_send_data;
     wire       resp_done;
@@ -70,9 +73,9 @@ module hdb3_top (
     // ============================================================
     // 内部存储数组 (仅顶层拥有数组, 端口全部扁平)
     // ============================================================
-    reg [7:0] payload_buf [0:255];   // 接收到的 payload
-    reg [7:0] sym_buf [0:511];       // 编码符号暂存 (用于回环+应答)
-    reg [7:0] bit_buf [0:255];       // 编码用比特数据
+    reg [7:0] payload_buf [0:63];    // received payload, limited by PC app
+    reg [7:0] sym_buf [0:63];        // response/DAC symbol buffer
+    reg [7:0] bit_buf [0:7];         // packed encode bits, 64 bits max
 
     // ============================================================
     // 子模块例化
@@ -116,7 +119,7 @@ module hdb3_top (
     response_tx u_resp (
         .clk(clk_50m), .rst_n(rst_n),
         .start(resp_start), .resp_cmd(resp_cmd), .resp_status(resp_status), .resp_len(resp_len),
-        .wr_data(resp_wr_data), .wr_addr(resp_wr_addr), .wr_en(resp_wr_en),
+        .payload_addr(resp_payload_addr), .payload_data(resp_payload_data),
         .send_en(resp_send_en), .send_data(resp_send_data),
         .tx_done(tx_done), .tx_busy(tx_busy), .resp_done(resp_done)
     );
@@ -124,6 +127,8 @@ module hdb3_top (
     uart_byte_tx #(.CLK_FREQ(50_000_000), .BAUD_RATE(115200))
     u_tx (.clk(clk_50m), .rst_n(rst_n), .send_en(resp_send_en), .data_byte(resp_send_data),
           .uart_tx(uart_tx), .tx_done(tx_done), .tx_busy(tx_busy));
+
+    assign resp_payload_data = sym_buf[resp_payload_addr];
     // ============================================================
     // payload 接收: 从 parser 的逐字节输出存入内部数组
     // ============================================================
@@ -133,7 +138,7 @@ module hdb3_top (
             pl_idx <= 8'd0;
         else if (cmd_done)
             pl_idx <= 8'd0;
-        else if (parsed_pvalid) begin
+        else if (parsed_pvalid && pl_idx < MAX_FRAME_ITEMS) begin
             payload_buf[pl_idx] <= parsed_pdata;
             pl_idx <= pl_idx + 8'd1;
         end
@@ -174,15 +179,39 @@ module hdb3_top (
         case (m_state)
             M_IDLE: begin
                 if (cmd_done) begin
-                    if (parsed_cmd == 8'h01)  m_next = M_ENC_PREP;
-                    else if (parsed_cmd == 8'h02) m_next = M_DEC_PREP;
-                    else m_next = M_ERR_SEND;
+                    if (parsed_cmd == 8'h01) begin
+                        if (parsed_len >= 8'd2 && parsed_len <= (MAX_BIT_BYTES + 8'd2))
+                            m_next = M_ENC_PREP;
+                        else
+                            m_next = M_ERR_SEND;
+                    end
+                    else if (parsed_cmd == 8'h02) begin
+                        if (parsed_len > 8'd0 && parsed_len <= MAX_FRAME_ITEMS)
+                            m_next = M_DEC_PREP;
+                        else
+                            m_next = M_ERR_SEND;
+                    end
+                    else begin
+                        m_next = M_ERR_SEND;
+                    end
                 end
             end
-            M_ENC_PREP:  m_next = M_ENC_RUN;
+            M_ENC_PREP: begin
+                if (m_idx < ({3'b0, parsed_len} - 11'd2))
+                    m_next = M_ENC_PREP;
+                else if ({payload_buf[1], payload_buf[0]} == 16'd0 || {payload_buf[1], payload_buf[0]} > {8'd0, MAX_FRAME_ITEMS})
+                    m_next = M_ERR_SEND;
+                else
+                    m_next = M_ENC_RUN;
+            end
             M_ENC_RUN:   if (enc_done) m_next = M_ENC_LOOP;
             M_ENC_LOOP:  if (dec_done) m_next = M_START_DAC;
-            M_DEC_PREP:  m_next = M_DEC_RUN;
+            M_DEC_PREP: begin
+                if (m_idx < {3'b0, parsed_len})
+                    m_next = M_DEC_PREP;
+                else
+                    m_next = M_DEC_RUN;
+            end
             M_DEC_RUN:   if (dec_done) m_next = M_START_DAC;
             M_START_DAC: m_next = M_RESP_WRITE;
             M_RESP_WRITE: if (m_idx == resp_len) m_next = M_RESP_SEND;
@@ -197,7 +226,7 @@ module hdb3_top (
             enc_start   <= 1'b0; dec_start   <= 1'b0; dec_sym_vld <= 1'b0;
             dac_wr0_en  <= 1'b0; dac_wr1_en  <= 1'b0;
             dac_load    <= 1'b0; dac_stop    <= 1'b0;
-            resp_start  <= 1'b0; resp_wr_en  <= 1'b0;
+            resp_start  <= 1'b0;
             m_idx       <= 11'd0; m_wr0      <= 11'd0; m_wr1 <= 11'd0;
             m_sym_cnt   <= 11'd0; total_bits  <= 16'd0;
             resp_cmd    <= 8'd0; resp_status <= 8'd0; resp_len <= 8'd0;
@@ -206,7 +235,7 @@ module hdb3_top (
             enc_start   <= 1'b0; dec_start   <= 1'b0; dec_sym_vld <= 1'b0;
             dac_wr0_en  <= 1'b0; dac_wr1_en  <= 1'b0;
             dac_load    <= 1'b0; dac_stop    <= 1'b0;
-            resp_start  <= 1'b0; resp_wr_en  <= 1'b0;
+            resp_start  <= 1'b0;
 
             case (m_state)
                 M_IDLE: begin
@@ -313,21 +342,7 @@ module hdb3_top (
                 end
 
                 M_RESP_WRITE: begin
-                    if (resp_cmd == 8'h01 && m_idx < m_sym_cnt) begin
-                        resp_wr_en   <= 1'b1;
-                        resp_wr_addr <= m_idx[7:0];
-                        resp_wr_data <= sym_buf[m_idx];
-                        m_idx        <= m_idx + 11'd1;
-                    end
-                    else if (resp_cmd == 8'h02 && m_idx < {3'b0, resp_len}) begin
-                        resp_wr_en   <= 1'b1;
-                        resp_wr_addr <= m_idx[7:0];
-                        resp_wr_data <= sym_buf[m_idx];
-                        m_idx        <= m_idx + 11'd1;
-                    end
-                    else begin
-                        m_idx <= {3'b0, resp_len};
-                    end
+                    m_idx <= {3'b0, resp_len};
                 end
 
                 M_RESP_SEND: begin
@@ -367,7 +382,7 @@ module hdb3_top (
     reg [24:0] heartbeat_cnt;
     reg        led0;
 
-    assign led = {7'b111_1111, led0};
+    assign led = {7'b000_0000, led0};
 
     // 心跳计数器: 50MHz / 25000000 = 2Hz 翻转
     always @(posedge clk_50m or negedge rst_n) begin

@@ -41,7 +41,7 @@
                     <ComboBox ItemsSource="{Binding PortList}" SelectedItem="{Binding SelectedPort}"
                               Width="90" VerticalAlignment="Center" FontSize="12"
                               Style="{StaticResource PortCombo}"/>
-                    <Button Content="连接" Command="{Binding ConnectCmd}" Margin="8,0,0,0"
+                    <Button Content="{Binding ConnectButtonText}" Command="{Binding ConnectCmd}" Margin="8,0,0,0"
                             Style="{StaticResource BtnConnect}"/>
 
                     <Border Width="1" Background="#30363D" Margin="14,4"/>

@@ -60,11 +60,12 @@ module hdb3_top (
     reg [10:0] dac_wr0_addr, dac_wr1_addr;
     reg        dac_load, dac_stop;
     reg [10:0] dac_len0, dac_len1;
+    wire       dac_playing;
 
     // response_tx
     reg        resp_start;
     reg  [7:0] resp_cmd, resp_status, resp_len;
-    wire [7:0] resp_payload_addr;
+    wire [5:0] resp_payload_addr;
     wire [7:0] resp_payload_data;
     wire       resp_send_en, tx_done, tx_busy;
     wire [7:0] resp_send_data;
@@ -112,7 +113,8 @@ module hdb3_top (
         .wr_data1(dac_wr1_data), .wr_en1(dac_wr1_en), .wr_addr1(dac_wr1_addr),
         .load_done(dac_load), .play_len0(dac_len0), .play_len1(dac_len1),
         .stop(dac_stop),
-        .DA0_Data(DA0_Data), .DA1_Data(DA1_Data), .DA_Clk(DA0_Clk)
+        .DA0_Data(DA0_Data), .DA1_Data(DA1_Data), .DA_Clk(DA0_Clk),
+        .playing_out(dac_playing)
     );
     assign DA1_Clk = DA0_Clk;
 
@@ -167,7 +169,6 @@ module hdb3_top (
 
     reg [3:0]  m_state, m_next;
     reg [10:0] m_idx, m_wr0, m_wr1, m_sym_cnt;
-    reg [15:0] total_bits;
 
     always @(posedge clk_50m or negedge rst_n) begin
         if (!rst_n) m_state <= M_IDLE;
@@ -228,7 +229,7 @@ module hdb3_top (
             dac_load    <= 1'b0; dac_stop    <= 1'b0;
             resp_start  <= 1'b0;
             m_idx       <= 11'd0; m_wr0      <= 11'd0; m_wr1 <= 11'd0;
-            m_sym_cnt   <= 11'd0; total_bits  <= 16'd0;
+            m_sym_cnt   <= 11'd0;
             resp_cmd    <= 8'd0; resp_status <= 8'd0; resp_len <= 8'd0;
         end
         else begin
@@ -241,21 +242,20 @@ module hdb3_top (
                 M_IDLE: begin
                     m_idx    <= 11'd0; m_wr0 <= 11'd0; m_wr1 <= 11'd0;
                     m_sym_cnt <= 11'd0;
-                    dac_stop <= 1'b1;
                     resp_status <= 8'h00;
                 end
 
                 M_ENC_PREP: begin
                     // 编码准备: payload[0..1] = bit_cnt, [2..] = bit_data
-                    total_bits <= {payload_buf[1], payload_buf[0]};
                     resp_cmd   <= 8'h01;
+                    dac_stop   <= 1'b1;
                     // 将 payload 中 bit_data 复制到 bit_buf
                     if (m_idx < parsed_len - 8'd2) begin
                         bit_buf[m_idx] <= payload_buf[m_idx + 2];
                         m_idx <= m_idx + 11'd1;
                     end
                     else begin
-                        enc_total_bits <= total_bits[10:0];
+                        enc_total_bits <= {3'b0, payload_buf[0]};
                         enc_start      <= 1'b1;
                         m_idx          <= 11'd0;
                     end
@@ -303,6 +303,7 @@ module hdb3_top (
 
                 M_DEC_PREP: begin
                     resp_cmd <= 8'h02;
+                    dac_stop <= 1'b1;
                     if (m_idx < parsed_len) begin
                         dac_wr0_en   <= 1'b1;
                         dac_wr0_addr <= m_idx;
@@ -381,8 +382,42 @@ module hdb3_top (
     // ============================================================
     reg [24:0] heartbeat_cnt;
     reg        led0;
+    reg        led_rx_seen;
+    reg        led_cmd_ok;
+    reg        led_cmd_err;
+    reg        led_busy;
+    reg        led_uart_tx_busy;
+    reg        led_dac_playing;
+    reg        led_resp_done;
 
-    assign led = {7'b000_0000, led0};
+    assign led = {~led_resp_done, ~led_dac_playing, ~led_uart_tx_busy, ~led_busy,
+                  ~led_cmd_err, ~led_cmd_ok, ~led_rx_seen, led0};
+
+    always @(posedge clk_50m or negedge rst_n) begin
+        if (!rst_n) begin
+            led_rx_seen      <= 1'b0;
+            led_cmd_ok       <= 1'b0;
+            led_cmd_err      <= 1'b0;
+            led_busy         <= 1'b0;
+            led_uart_tx_busy <= 1'b0;
+            led_dac_playing  <= 1'b0;
+            led_resp_done    <= 1'b0;
+        end
+        else begin
+            if (rx_done)
+                led_rx_seen <= 1'b1;
+            if (cmd_done)
+                led_cmd_ok <= 1'b1;
+            if (cmd_error || m_state == M_ERR_SEND)
+                led_cmd_err <= 1'b1;
+            if (resp_done)
+                led_resp_done <= 1'b1;
+
+            led_busy         <= (m_state != M_IDLE);
+            led_uart_tx_busy <= tx_busy;
+            led_dac_playing  <= dac_playing;
+        end
+    end
 
     // 心跳计数器: 50MHz / 25000000 = 2Hz 翻转
     always @(posedge clk_50m or negedge rst_n) begin

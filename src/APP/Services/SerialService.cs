@@ -17,6 +17,7 @@ namespace HDB3_App.Services
 
         /// <summary>接收到完整应答帧 (cmd + status + payload)</summary>
         public event Action<byte, byte, byte[]> FrameReceived;
+        public event Action<string> RawLog;
 
         public bool IsOpen => _port?.IsOpen ?? false;
         public string[] PortNames => SerialPort.GetPortNames();
@@ -67,6 +68,7 @@ namespace HDB3_App.Services
             frame[5 + len] = CalcChecksum(frame, 2, 3 + len);
 
             _port.Write(frame, 0, frame.Length);
+            RawLog?.Invoke($"TX {ToHex(frame)}");
         }
 
         /// <summary>
@@ -80,6 +82,7 @@ namespace HDB3_App.Services
                 byte[] buf = new byte[cnt];
                 _port.Read(buf, 0, cnt);
                 _rxBuf.AddRange(buf);
+                RawLog?.Invoke($"RX {ToHex(buf)}");
 
                 // 字节流状态机解析 AA 55 应答帧
                 while (_rxBuf.Count >= 7)
@@ -125,6 +128,10 @@ namespace HDB3_App.Services
                         var payloadCopy = payload;
                         _dispatcher.Invoke(() => FrameReceived?.Invoke(cmdCopy, statusCopy, payloadCopy));
                     }
+                    else
+                    {
+                        RawLog?.Invoke($"RX checksum error calc={csCalc:X2} got={_rxBuf[6 + len]:X2}");
+                    }
 
                     // 移除已解析帧
                     _rxBuf.RemoveRange(0, frameLen);
@@ -140,6 +147,9 @@ namespace HDB3_App.Services
                 cs += data[i];
             return cs;
         }
+
+        private static string ToHex(byte[] data)
+            => BitConverter.ToString(data).Replace('-', ' ');
 
         public void Dispose() => Close();
     }

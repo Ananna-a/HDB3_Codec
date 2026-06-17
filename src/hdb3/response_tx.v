@@ -12,7 +12,7 @@ module response_tx (
     input  wire [7:0] resp_status,
     input  wire [7:0] resp_len,
 
-    output wire [7:0] payload_addr,
+    output wire [5:0] payload_addr,
     input  wire [7:0] payload_data,
 
     output reg        send_en,
@@ -33,7 +33,8 @@ module response_tx (
     reg [8:0] total_bytes;
     reg [7:0] cs_val;
 
-    assign payload_addr = byte_idx[7:0] - 8'd6;
+    wire [8:0] payload_index = (byte_idx >= 9'd6) ? (byte_idx - 9'd6) : 9'd0;
+    assign payload_addr = payload_index[5:0];
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)

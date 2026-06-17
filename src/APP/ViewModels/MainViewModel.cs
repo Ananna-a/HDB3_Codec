@@ -38,6 +38,7 @@ namespace HDB3_App.ViewModels
         private string _selPort;
         public string SelectedPort { get => _selPort; set { _selPort = value; OnPropertyChanged(); } }
         public bool IsConnected => _serial.IsOpen;
+        public string ConnectButtonText => IsConnected ? "断开" : "连接";
         private bool _isBusy;
         public bool IsBusy
         {
@@ -113,6 +114,7 @@ namespace HDB3_App.ViewModels
             var disp = new SynchronizedDispatcher(Application.Current.Dispatcher);
             _serial = new SerialService(disp);
             _serial.FrameReceived += OnFrame;
+            _serial.RawLog += Log;
 
             ConnectCmd   = new RelayCommand(_ => ToggleConnect());
             EncodeCmd    = new RelayCommand(_ => SendEncode(), _ => !IsBusy && _serial.IsOpen);
@@ -387,6 +389,7 @@ namespace HDB3_App.ViewModels
                 Log($"串口错误: {ex.Message}");
             }
             OnPropertyChanged(nameof(IsConnected));
+            OnPropertyChanged(nameof(ConnectButtonText));
             CommandManager.InvalidateRequerySuggested();
         }
 

@@ -24,8 +24,11 @@ module dac_playback (
 
     output reg  [7:0]  DA0_Data,
     output reg  [7:0]  DA1_Data,
-    output reg         DA_Clk
+    output reg         DA_Clk,
+    output wire        playing_out
 );
+
+    assign playing_out = playing;
 
     wire [7:0] rd_data0;
     wire [7:0] rd_data1;

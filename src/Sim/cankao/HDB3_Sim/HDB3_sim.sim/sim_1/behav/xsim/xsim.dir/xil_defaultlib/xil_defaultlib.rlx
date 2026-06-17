@@ -1,0 +1,9 @@
+0.6
+2018.3
+Dec  7 2018
+00:33:28
+D:/Desktop/HDB3_Sim/HDB3_sim.sim/sim_1/behav/xsim/glbl.v,1544155481,verilog,,,,glbl,,,,,,,,
+D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sim_1/new/tb_hdb3.v,1781588329,verilog,,,,tb_hdb3,,,,,,,,
+D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sources_1/new/hdb3_decoder.v,1781588108,verilog,,D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sources_1/new/hdb3_encoder.v,,hdb3_decoder,,,,,,,,
+D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sources_1/new/hdb3_encoder.v,1781588086,verilog,,D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sources_1/new/hdb3_top.v,,hdb3_encoder,,,,,,,,
+D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sources_1/new/hdb3_top.v,1781588232,verilog,,D:/Desktop/HDB3_Sim/HDB3_sim.srcs/sim_1/new/tb_hdb3.v,,hdb3_top,,,,,,,,

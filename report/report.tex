@@ -771,7 +771,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\textwidth]{仿真的RTL框图.png}
+  \includegraphics[width=1.0\textwidth]{仿真的RTL框图.png}
   \caption{独立仿真工程 RTL 结构图}
   \label{fig:rtl_sim}
 \end{figure}
@@ -780,7 +780,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\textwidth]{Modelsim仿真图.png}
+  \includegraphics[width=1.0\textwidth]{Modelsim仿真图.png}
   \caption{ModelSim HDB3 编译码波形仿真}
   \label{fig:modelsim_wave}
 \end{figure}
@@ -1083,12 +1083,15 @@ end
 
 此外，\texttt{hdb3\_top.v} 中的 \texttt{payload\_buf[0:63]} 和 \texttt{sym\_buf[0:63]}（各 $64 \times 8$ bit）规模有限，即使推断为分布式 RAM 也不会造成明显瓶颈，但仍采用同步时序写法以保证代码风格的一致性。
 
+\newpage
 \section{总结}
 
-本文完成了一套基于 FPGA 的 HDB3 编译码器系统。系统实现了二进制序列到 HDB3 符号序列的编码、HDB3 符号序列到二进制序列的译码、上位机串口控制、FPGA 应答返回和双通道 DAC 波形输出。与单纯软件仿真相比，本设计能够同时给出软件参考结果、FPGA 实际返回结果和示波器实测波形，验证链路更加完整。
+本文完成了一套基于 FPGA 的 HDB3 编译码器系统。系统以 ACX720 开发板（GW5AT-138B）为硬件平台，实现了二进制序列到 HDB3 符号序列的编码、HDB3 符号序列到二进制序列的译码、单 UART 命令/应答通信和双通道 DAC 波形输出。上位机采用 C\# WPF 编写，通过独立的软件参考算法生成期望结果，与 FPGA 返回值进行逐符号比对，形成"软件参考—FPGA 返回—示波器波形"三层验证闭环。
 
-实验结果表明，在全 0、全 1、10 交替、典型混合、长 0、编码随机和解码随机等工况下，上位机软件参考结果与 FPGA 返回结果一致；示波器能够观察到 HDB3 码的正负交替脉冲、四连零替换脉冲和译码恢复波形。由此说明 FPGA 编译码逻辑、UART 通信和 DAC 输出均达到设计要求。
+在实现层面，编码器采用奇偶法判断四连零替换形式，以 \texttt{S\_READ}、\texttt{S\_FLUSH}、\texttt{S\_SUBST} 三状态流水线完成零符号延迟和批量替换；译码器采用直接符号映射，与编码器在逻辑上解耦。DAC 播放模块通过双缓存预填充机制消除了编译码流水线延迟，使两路波形在示波器上码元对齐。开发过程中曾因 \texttt{dac\_wave\_ram} 的异步复位写法阻碍 BSRAM 推断，导致综合速度严重劣化，改为纯同步读端口后恢复正常，这一经验对 FPGA 存储阵列的 RTL 设计具有参考意义。
 
-后续可进一步扩展序列长度，补充覆盖最终 Gowin 顶层的系统级 testbench，并增加更长时间随机序列测试和异常帧处理测试，使系统验证更加充分。
+实验结果表明，在全 0、全 1、10 交替、典型混合、长 0、编码随机和解码随机等工况下，上位机软件参考结果与 FPGA 返回结果一致，示波器能够观察到 HDB3 码的正负交替脉冲、四连零替换脉冲和译码恢复波形，FPGA 编译码逻辑、UART 通信和 DAC 输出均达到设计要求。
+
+后续可进一步完善系统级 testbench 覆盖，增加更长时间随机序列测试和异常帧处理测试，并探索将编译码参数（码元速率、序列长度）设计为可动态配置，提升系统的通用性。
 
 \end{document}

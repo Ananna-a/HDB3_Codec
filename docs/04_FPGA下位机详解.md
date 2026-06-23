@@ -1,6 +1,6 @@
 # FPGA 下位机详解
 
-> 面向实机调试：说明 FPGA 端数据流、HDB3 编解码规则、DAC 波形、LED 状态和下载验证方法。当前 FPGA 已下载并与上位机联调成功，仿真作为最后补充项。
+> 面向实机调试：说明 FPGA 端数据流、HDB3 编解码规则、DAC 波形、LED 状态和下载验证方法。当前 FPGA 已下载并与上位机联调成功，仿真和报告均已完成。
 
 ## 1. 下位机职责
 
@@ -206,3 +206,4 @@ AA 55 | cmd | status | len_l | len_h | payload[0..N-1] | checksum
 | LED6 不亮 | DAC 未启动，检查 FSM 是否到 `M_START_DAC` |
 | DA0 波形不像 RZ | 先确认 200kHz `DA_Clk`，再看 DA0 是否前 5us 脉冲、后 5us 归零 |
 | DA0/DA1 看似错位 | 注意 DA0 是 RZ 半宽，DA1 是 NRZ 整宽；符号边界由同一 `DA_Clk` 对齐 |
+| 综合/布线耗时极长 | 检查 `dac_wave_ram.v` 读端口是否为纯同步 (`posedge clk`)，异步复位会阻碍 BSRAM 推断 |

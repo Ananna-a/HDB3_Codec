@@ -1,0 +1,960 @@
+\documentclass[UTF8,a4paper,12pt]{ctexart}
+
+% 加载报告排版宏包
+\usepackage[left=2.6cm,right=2.6cm,top=2.6cm,bottom=2.6cm,headheight=15pt]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{chngcntr}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+\usepackage{hyperref}
+\usepackage{listings}
+
+% 加载绘图组件
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric,backgrounds,decorations.pathreplacing}
+
+% 设置图片路径
+\graphicspath{{figure/}}
+
+% 设置超链接样式
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=black,
+  citecolor=black
+}
+
+% 设置正文格式
+\onehalfspacing
+\zihao{-4}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlist{nosep,leftmargin=2.5em}
+
+% 设置章节标题格式
+\ctexset{
+  section={
+    format={\centering\heiti\zihao{3}},
+    name={,},
+    number=\arabic{section},
+    aftername=\quad,
+    beforeskip=1.2em,
+    afterskip=1.0em
+  },
+  subsection={
+    format={\heiti\zihao{4}},
+    name={,},
+    number=\arabic{section}.\arabic{subsection},
+    aftername=\quad,
+    beforeskip=0.8em,
+    afterskip=0.4em
+  },
+  subsubsection={
+    format={\heiti\zihao{-4}},
+    name={,},
+    number=\arabic{section}.\arabic{subsection}.\arabic{subsubsection},
+    aftername=\quad,
+    beforeskip=0.5em,
+    afterskip=0.2em
+  }
+}
+
+% 设置目录格式
+\renewcommand{\contentsname}{\zihao{3}\heiti 目\quad 录}
+\renewcommand{\cfttoctitlefont}{\hfill\zihao{3}\heiti}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\cftsecfont}{\songti\zihao{-4}}
+\renewcommand{\cftsubsecfont}{\songti\zihao{-4}}
+\renewcommand{\cftsubsubsecfont}{\songti\zihao{-4}}
+\renewcommand{\cftsecpagefont}{\songti\zihao{-4}\mdseries}
+\renewcommand{\cftsubsecpagefont}{\songti\zihao{-4}\mdseries}
+\renewcommand{\cftsubsubsecpagefont}{\songti\zihao{-4}\mdseries}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftaftertoctitleskip}{0.8em}
+\setlength{\cftbeforesecskip}{0.5em}
+\setlength{\cftbeforesubsecskip}{0.18em}
+\setlength{\cftbeforesubsubsecskip}{0.12em}
+\cftsetindents{section}{0em}{2.2em}
+\cftsetindents{subsection}{2.0em}{3.0em}
+\cftsetindents{subsubsection}{4.4em}{4.2em}
+
+% 设置图表格式
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\captionsetup{font=small,labelfont=bf,labelsep=quad,justification=centering}
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\renewcommand{\thefigure}{\thesection-\arabic{figure}}
+\renewcommand{\thetable}{\thesection-\arabic{table}}
+
+% 设置代码摘录格式
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  frame=single,
+  rulecolor=\color{black},
+  tabsize=4,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  escapeinside={\%*}{*)},
+  xleftmargin=2em,
+  xrightmargin=2em,
+  aboveskip=1em,
+  belowskip=1em
+}
+
+\lstdefinestyle{VerilogStyle}{
+  language=Verilog,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{orange},
+  breaklines=true,
+  breakatwhitespace=false
+}
+
+\lstdefinestyle{CSharpStyle}{
+  language=[Sharp]C,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{orange},
+  breaklines=true,
+  breakatwhitespace=false
+}
+
+% 设置页眉页脚
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\songti\zihao{-5}基于FPGA的HDB3编译码器系统设计}
+\fancyfoot[C]{\songti\zihao{-5}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[C]{\songti\zihao{-5}基于FPGA的HDB3编译码器系统设计}
+  \fancyfoot[C]{\songti\zihao{-5}\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+% 定义图形节点样式
+\tikzset{
+  block/.style={draw=blue!55!black,rounded corners=2pt,align=center,minimum height=0.9cm,minimum width=2.5cm,fill=blue!5,line width=0.6pt},
+  smallblock/.style={draw=blue!55!black,rounded corners=2pt,align=center,minimum height=0.75cm,minimum width=1.8cm,fill=blue!5,font=\small,line width=0.6pt},
+  ioblock/.style={draw=teal!60!black,rounded corners=2pt,align=center,minimum height=0.9cm,minimum width=2.5cm,fill=teal!6,line width=0.6pt},
+  coreblock/.style={draw=orange!70!black,rounded corners=2pt,align=center,minimum height=0.9cm,minimum width=2.5cm,fill=orange!8,line width=0.6pt},
+  storeblock/.style={draw=violet!70!black,rounded corners=2pt,align=center,minimum height=0.8cm,minimum width=2.4cm,fill=violet!6,line width=0.6pt},
+  decision/.style={diamond,aspect=2.1,draw=orange!70!black,align=center,inner sep=1pt,minimum height=0.9cm,fill=orange!8,line width=0.6pt},
+  framebyte/.style={draw=blue!55!black,minimum height=0.72cm,align=center,fill=blue!5,line width=0.5pt},
+  arrow/.style={-{Stealth[length=2.4mm]},thick,draw=black!75},
+  bus/.style={-{Stealth[length=2.4mm]},thick,draw=blue!65!black},
+  returnbus/.style={-{Stealth[length=2.4mm]},thick,draw=teal!65!black},
+  wavegrid/.style={gray!35,line width=0.35pt}
+}
+
+\begin{document}
+
+% 生成目录页
+\newpage
+\pagenumbering{Roman}
+
+\fancypagestyle{tocpage}{
+  \fancyhf{}
+  \fancyhead[C]{\songti\zihao{-5}基于FPGA的HDB3编译码器系统设计}
+  \fancyfoot[C]{\songti\zihao{-5}\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+\thispagestyle{tocpage}
+
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\phantomsection
+\section*{摘要}
+\addcontentsline{toc}{section}{摘要}
+
+本文围绕“HDB3 编译码器的仿真”课题，设计并实现了一套基于 FPGA 的 HDB3 编译码器系统。系统以单极性不归零二进制数字信号为输入，在 FPGA 中完成 HDB3 编码、译码、串口通信和双通道 DAC 波形输出；上位机采用 C\# WPF 编写，用于输入测试序列、计算软件参考结果、发送串口命令、接收 FPGA 应答并进行逐项比对。硬件平台采用 ACX720 开发板，FPGA 芯片为 GW5AT-138B，通信接口为 115200 bps、8N1 单 UART。
+
+系统设计中，HDB3 编码器按照 AMI 极性交替和四连零替换规则生成 \texttt{+1}、\texttt{-1}、\texttt{+V}、\texttt{-V}、\texttt{+B}、\texttt{-B} 等符号；译码器将普通正负脉冲恢复为 1，将零电平、破坏脉冲和补信脉冲恢复为 0。FPGA 通过 \texttt{55 AA} 命令帧接收上位机请求，通过 \texttt{AA 55} 应答帧返回处理结果。DA0 输出 HDB3 双极性归零波形，DA1 输出译码后的 NRZ 波形，便于示波器对比观察。
+
+实验部分完成了独立仿真 RTL 结构检查、上位机与 FPGA 编码测试、上位机与 FPGA 译码测试以及示波器实测验证。全 0、全 1、10 交替、典型混合、长 0、编码随机和解码随机等测试结果表明，FPGA 返回结果与上位机软件参考结果一致，示波器波形能够体现 HDB3 码的正负交替、四连零替换和译码恢复特性。实验验证了本系统 HDB3 编译码功能的正确性。
+
+\noindent\textbf{关键词：}HDB3；FPGA；UART；DAC；上位机；示波器
+
+\section{绪论}
+
+\subsection{课题背景}
+
+在数字基带传输系统中，线路编码用于把二进制数据转换为适合传输和观察的电平波形。不同编码方式会影响信号的直流分量、定时信息和波形可识别性。单极性不归零码实现简单，但当输入数据中出现较长连续 0 时，线路电平会长时间保持不变，接收端不容易从波形中提取同步信息。
+
+AMI 码将二进制 1 交替表示为正、负脉冲，可以减小直流分量，但连续 0 仍然会造成长时间无跳变。HDB3 码在 AMI 码基础上加入四连零替换规则，通过破坏脉冲和补信脉冲限制连续零电平的长度。因此，HDB3 码既能保持 AMI 码正负脉冲交替的特点，又能改善长连零条件下的定时信息不足问题。
+
+本设计围绕 HDB3 编码、译码和波形验证展开。为了让编码规则不只停留在理论推导中，本文将 HDB3 编译码逻辑放入 FPGA 实现，并配套设计上位机通信和 DAC 波形输出，使软件计算结果、FPGA 返回结果和示波器实测波形能够相互对应。
+
+\subsection{设计任务}
+
+本设计以单极性不归零二进制序列为输入，在 FPGA 中完成 HDB3 编码和译码，并通过上位机与示波器完成结果验证。系统需要完成以下内容：
+
+\begin{enumerate}
+  \item 实现二进制序列到 HDB3 符号序列的编码。
+  \item 实现 HDB3 符号序列到二进制序列的译码。
+  \item 建立上位机与 FPGA 之间的单 UART 通信链路。
+  \item 在上位机中生成软件参考结果，并与 FPGA 返回结果进行比对。
+  \item 通过双通道 DAC 输出 HDB3 编码波形和译码恢复波形。
+  \item 结合仿真、串口联调和示波器实测验证系统功能。
+\end{enumerate}
+
+\subsection{系统验证思路}
+
+本文采用“软件参考、FPGA 返回、示波器波形”三层验证方式。首先，上位机软件根据 HDB3 编译码规则计算期望结果；然后，FPGA 对相同输入进行处理，并通过 UART 返回实际结果，上位机逐 bit 或逐符号进行比对；最后，FPGA 将编码结果和译码结果送入 DAC，通过示波器观察 DA0、DA1 两路波形是否符合预期。
+
+此外，报告保留独立仿真工程结果，用于补充说明 HDB3 编译码逻辑在仿真环境中的结构和基本功能。该仿真工程不包含最终系统中的上位机通信、UART 协议解析和 DAC 播放结构，因此本文将其作为功能补充验证，而不作为最终 FPGA 系统结构的依据。
+
+\section{HDB3 编译码原理}
+
+\subsection{AMI 码原理}
+
+AMI 码的编码规则为：输入 0 时输出零电平，输入 1 时输出非零脉冲，并且相邻的 1 依次采用正、负极性交替表示。若输入序列为连续的 1，则输出波形会呈现正、负、正、负交替；若输入序列中出现连续 0，则输出保持零电平。
+
+AMI 码能够减少直流分量，但它对连续 0 没有额外处理。当连续 0 的长度较长时，传输线上长时间没有电平跳变，不利于接收端保持时钟同步。HDB3 码通过限制连续零电平个数，解决了这一问题。
+
+\subsection{HDB3 编码规则}
+
+HDB3 码的核心规则是在 AMI 码基础上对四连零进行替换，使输出序列中最多只出现三个连续零电平。工程实现中常采用奇偶法判断替换形式：自上一次破坏脉冲 \texttt{V} 以后，如果普通 1 的个数为偶数，则连续四个 0 替换为 \texttt{B00V}；如果普通 1 的个数为奇数，则连续四个 0 替换为 \texttt{000V}。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[font=\small,node distance=1.0cm]
+    \node[smallblock,minimum width=2.6cm] (zeros) {检测到\\\texttt{0000}};
+    \node[decision,right=1.1cm of zeros,minimum width=2.5cm] (judge) {普通 1\\个数};
+    \node[coreblock,right=1.3cm of judge,yshift=0.88cm,minimum width=3.1cm] (even) {偶数\\\texttt{0000 -> B00V}};
+    \node[coreblock,right=1.3cm of judge,yshift=-0.88cm,minimum width=3.1cm] (odd) {奇数\\\texttt{0000 -> 000V}};
+    \node[smallblock,right=1.2cm of even,minimum width=2.8cm] (even_note) {插入补信脉冲\\保持极性平衡};
+    \node[smallblock,right=1.2cm of odd,minimum width=2.8cm] (odd_note) {插入破坏脉冲\\标记替换位置};
+    \draw[arrow] (zeros) -- (judge);
+    \draw[arrow] (judge.east) -- ++(0.35,0) |- node[pos=0.24,above]{偶数} (even.west);
+    \draw[arrow] (judge.east) -- ++(0.35,0) |- node[pos=0.24,below]{奇数} (odd.west);
+    \draw[arrow] (even) -- (even_note);
+    \draw[arrow] (odd) -- (odd_note);
+  \end{tikzpicture}
+  \caption{HDB3 四连零替换规则}
+  \label{fig:hdb3_rule}
+\end{figure}
+
+其中，\texttt{V} 是破坏脉冲，其极性故意破坏 AMI 极性交替规律，使接收端能够识别四连零替换位置；\texttt{B} 是补信脉冲，用于维持整体直流平衡。替换完成后，编码器重新开始统计普通 1 的奇偶状态。
+
+\subsection{HDB3 译码规则}
+
+HDB3 译码的目标是恢复原始二进制序列。普通正脉冲 \texttt{+1} 和普通负脉冲 \texttt{-1} 来源于原始输入中的 1，因此译码为 1；零电平 \texttt{0}、破坏脉冲 \texttt{+V/-V} 和补信脉冲 \texttt{+B/-B} 均对应原始输入中的 0，因此译码为 0。
+
+本设计的译码器采用直接符号映射方式，不再反向查找 \texttt{B00V} 或 \texttt{000V} 的组合位置。这种方式与本系统采用的编码符号定义一致，便于 FPGA 批处理实现和上位机逐项比较。
+
+\subsection{符号定义}
+
+上位机与 FPGA 通信时，每个 HDB3 符号使用一个字节表示，具体定义如表 \ref{tab:symbol_definition} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{HDB3 符号定义}
+  \label{tab:symbol_definition}
+  \begin{tabular}{ccc}
+    \toprule
+    字节值 & 显示符号 & 含义 \\
+    \midrule
+    \texttt{0x00} & \texttt{0} & 零电平 \\
+    \texttt{0x01} & \texttt{+1} & 正普通脉冲 \\
+    \texttt{0x02} & \texttt{-1} & 负普通脉冲 \\
+    \texttt{0x03} & \texttt{+V} & 正破坏脉冲 \\
+    \texttt{0x04} & \texttt{-V} & 负破坏脉冲 \\
+    \texttt{0x05} & \texttt{+B} & 正补信脉冲 \\
+    \texttt{0x06} & \texttt{-B} & 负补信脉冲 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{系统方案设计}
+
+\subsection{总体结构}
+
+系统由上位机、UART 通信链路、FPGA 下位机、双通道 DAC 和示波器组成。上位机输入测试序列并计算软件参考结果，FPGA 接收命令后完成编码或译码，并同时返回数字结果与输出模拟波形。总体结构如图 \ref{fig:system_structure} 所示。
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.86\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small,node distance=1.05cm]
+    \node[ioblock,minimum width=3.0cm,minimum height=1.05cm] (pc) {上位机\\输入与比对};
+    \node[ioblock,right=of pc,minimum width=2.4cm,minimum height=1.05cm] (uart) {单 UART\\115200 bps};
+    \node[storeblock,right=of uart,minimum width=3.0cm,minimum height=1.05cm] (fpga) {FPGA\\HDB3 编译码};
+    \node[coreblock,right=of fpga,minimum width=2.4cm,minimum height=1.05cm] (dac) {双通道 DAC};
+    \node[ioblock,right=of dac,minimum width=2.4cm,minimum height=1.05cm] (scope) {示波器};
+
+    \draw[bus] (pc) -- node[above]{命令} (uart);
+    \draw[bus] (uart) -- (fpga);
+    \draw[bus] (fpga) -- node[above]{波形} (dac);
+    \draw[bus] (dac) -- (scope);
+    \draw[returnbus] ([yshift=0.16cm]fpga.north) -- ++(0,0.55) -| node[pos=0.65,above]{应答} ([yshift=0.16cm]pc.north);
+  \end{tikzpicture}
+  }
+  \caption{系统总体结构}
+  \label{fig:system_structure}
+\end{figure}
+
+系统实现时以 ACX720 开发板为硬件平台，FPGA 工程运行在 50 MHz 系统时钟下。串口通信采用 115200 bps、8N1 格式，DAC 播放模块将一个码元划分为两个采样阶段，因此 HDB3 码元速率为 100 ksym/s，DAC 采样时钟为 200 kHz。主要参数如表 \ref{tab:system_params} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{系统主要设计参数}
+  \label{tab:system_params}
+  \begin{tabularx}{\textwidth}{c c X}
+    \toprule
+    参数项 & 取值 & 说明 \\
+    \midrule
+    硬件平台 & ACX720 / GW5AT-138B & FPGA 下位机实现 HDB3 编码、译码和 DAC 播放 \\
+    系统时钟 & 50 MHz & 顶层逻辑、串口模块和 DAC 播放控制共用时钟 \\
+    串口格式 & 115200 bps，8N1 & PC 与 FPGA 使用单 UART 进行命令和应答传输 \\
+    命令帧头 & \texttt{55 AA} & PC 到 FPGA 的命令帧起始标志 \\
+    应答帧头 & \texttt{AA 55} & FPGA 到 PC 的应答帧起始标志 \\
+    序列长度 & 最多 64 个 bit / 符号 & 与 FPGA 缓存和应答帧长度一致 \\
+    码元速率 & 100 ksym/s & 由 50 MHz 时钟经 500 个周期分频得到 \\
+    DAC 采样率 & 200 kHz & 每个码元包含前半码元和后半码元两次采样 \\
+    DAC 通道 & DA0 / DA1 & DA0 输出 HDB3 RZ 波形，DA1 输出译码 NRZ 波形 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+该结构将数字比对和波形观察结合起来。上位机比对能够精确判断每一个符号或 bit 是否正确；示波器波形能够直观展示 HDB3 码对长连零的处理效果和译码恢复结果。
+
+\subsection{FPGA 端结构}
+
+FPGA 端不是简单的单模块编码器，而是由串口收发、命令解析、编译码核心、应答发送和 DAC 播放控制共同组成。最终 Gowin 工程的顶层模块为 \texttt{hdb3\_top}，模块关系如图 \ref{fig:fpga_structure} 所示。
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.84\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small,node distance=0.9cm]
+    \node[ioblock,minimum width=2.2cm] (rx) {UART 接收};
+    \node[smallblock,right=of rx,minimum width=2.7cm] (parser) {命令解析};
+    \node[coreblock,right=of parser,minimum width=2.9cm] (codec) {HDB3\\编码 / 译码};
+    \node[storeblock,right=of codec,minimum width=2.7cm] (result) {结果缓存};
+    \node[ioblock,right=of result,yshift=0.62cm,minimum width=2.3cm] (tx) {UART 应答};
+    \node[ioblock,right=of result,yshift=-0.62cm,minimum width=2.3cm] (dacout) {DA0 / DA1};
+
+    \draw[bus] (rx) -- (parser);
+    \draw[bus] (parser) -- (codec);
+    \draw[bus] (codec) -- (result);
+    \draw[returnbus] ([yshift=0.14cm]result.east) -- ++(0.35,0) |- (tx.west);
+    \draw[bus] ([yshift=-0.14cm]result.east) -- ++(0.35,0) |- (dacout.west);
+  \end{tikzpicture}
+  }
+  \caption{最终 FPGA 工程模块关系}
+  \label{fig:fpga_structure}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \caption{FPGA 主要模块说明}
+  \label{tab:fpga_modules}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}l>{\ttfamily}lX}
+    \toprule
+    模块 & 文件 & 功能 \\
+    \midrule
+    hdb3\_top & src/hdb3\_top.v & 顶层调度、缓存管理、状态机控制和子模块例化 \\
+    packet\_parser & src/hdb3/packet\_parser.v & 解析 PC 到 FPGA 的 \texttt{55 AA} 命令帧 \\
+    response\_tx & src/hdb3/response\_tx.v & 封装并发送 FPGA 到 PC 的 \texttt{AA 55} 应答帧 \\
+    hdb3\_encoder & src/hdb3/hdb3\_encoder.v & 将二进制 bit 编码为 HDB3 符号 \\
+    hdb3\_decoder & src/hdb3/hdb3\_decoder.v & 将 HDB3 符号译码为二进制 bit \\
+    dac\_playback & src/hdb3/dac\_playback.v & 控制 DA0、DA1 双通道循环播放 \\
+    uart\_byte\_rx & src/comm/uart\_byte\_rx.v & UART 字节接收 \\
+    uart\_byte\_tx & src/comm/uart\_byte\_tx.v & UART 字节发送 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{UART 协议设计}
+
+系统采用单 UART 通信，命令和应答共用同一串口。为了区分通信方向，PC 到 FPGA 的命令帧以 \texttt{55 AA} 开头，FPGA 到 PC 的应答帧以 \texttt{AA 55} 开头。帧格式如图 \ref{fig:uart_frame} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    \node[anchor=east] at (-0.25,0.36) {命令帧};
+    \foreach \name/\w/\text/\color [count=\i] in {
+      head_a/1.05/\texttt{55}/teal!10,
+      head_b/1.05/\texttt{AA}/teal!10,
+      cmd/1.15/\texttt{cmd}/blue!5,
+      len_l/1.2/\texttt{len\_l}/blue!5,
+      len_h/1.2/\texttt{len\_h}/blue!5,
+      payload/2.15/\texttt{payload}/orange!10,
+      checksum/1.55/\texttt{checksum}/violet!8
+    }{
+      \ifnum\i=1
+        \node[framebyte,minimum width=\w cm,fill=\color,anchor=west] (\name) at (0,0) {\text};
+      \else
+        \node[framebyte,minimum width=\w cm,fill=\color,anchor=west] (\name) at (prev.east) {\text};
+      \fi
+      \coordinate (prev) at (\name.east);
+    }
+
+    \node[anchor=east] at (-0.25,-1.04) {应答帧};
+    \foreach \name/\w/\text/\color [count=\i] in {
+      resp_head_a/1.05/\texttt{AA}/teal!10,
+      resp_head_b/1.05/\texttt{55}/teal!10,
+      resp_cmd/1.15/\texttt{cmd}/blue!5,
+      status/1.25/\texttt{status}/red!8,
+      resp_len_l/1.2/\texttt{len\_l}/blue!5,
+      resp_len_h/1.2/\texttt{len\_h}/blue!5,
+      resp_payload/2.15/\texttt{payload}/orange!10,
+      resp_checksum/1.55/\texttt{checksum}/violet!8
+    }{
+      \ifnum\i=1
+        \node[framebyte,minimum width=\w cm,fill=\color,anchor=west] (\name) at (0,-1.4) {\text};
+      \else
+        \node[framebyte,minimum width=\w cm,fill=\color,anchor=west] (\name) at (resp_prev.east) {\text};
+      \fi
+      \coordinate (resp_prev) at (\name.east);
+    }
+    \draw[decorate,decoration={brace,amplitude=5pt},teal!70!black] (head_a.north west) -- (head_b.north east);
+    \node[teal!70!black,font=\scriptsize,above=0.22cm of head_a.north east,anchor=south west] {命令帧头};
+    \draw[decorate,decoration={brace,mirror,amplitude=5pt},teal!70!black] (resp_head_a.south west) -- (resp_head_b.south east);
+    \node[teal!70!black,font=\scriptsize,below=0.22cm of resp_head_a.south east,anchor=north west] {应答帧头};
+  \end{tikzpicture}
+  \caption{UART 命令帧和应答帧格式}
+  \label{fig:uart_frame}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \caption{UART 命令码定义}
+  \label{tab:uart_command}
+  \begin{tabular}{cccc}
+    \toprule
+    命令码 & 方向 & 载荷内容 & 功能 \\
+    \midrule
+    \texttt{0x01} & PC 到 FPGA & 二进制 bit 数据 & 请求 FPGA 编码 \\
+    \texttt{0x01} & FPGA 到 PC & HDB3 符号序列 & 返回编码结果 \\
+    \texttt{0x02} & PC 到 FPGA & HDB3 符号序列 & 请求 FPGA 译码 \\
+    \texttt{0x02} & FPGA 到 PC & 二进制 bit 序列 & 返回译码结果 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{DAC 输出方案}
+
+DA0 用于输出 HDB3 编码波形，DA1 用于输出译码后的二进制波形。DA0 采用双极性归零形式：正符号输出正电平，负符号输出负电平，后半个码元回到零电平；DA1 采用 NRZ 形式：bit 为 1 时输出高电平，bit 为 0 时输出零电平。两路 DAC 共用采样时钟，因此码元边界对齐。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[x=0.82cm,y=0.82cm,font=\small]
+    \foreach \x in {0,1,...,10}{
+      \draw[wavegrid] (\x,-1.5) -- (\x,2.2);
+      \node[font=\scriptsize,gray!70] at (\x+0.5,-1.35) {\x};
+    }
+    \draw[->] (0,-1.15) -- (10.8,-1.15) node[right]{码元时间};
+    \node[anchor=east] at (-0.82,1.55) {DA1 译码 NRZ};
+    \node[anchor=east] at (-0.82,0.15) {DA0 HDB3 RZ};
+
+    \draw[thick,blue!70!black] (0,1.95) -- (1,1.95) -- (1,1.15) -- (2,1.15) -- (2,1.95) -- (5,1.95) -- (5,1.15) -- (7,1.15) -- (7,1.95) -- (10,1.95);
+    \draw[thick,red!70!black] (0,0.15) -- (0,0.55) -- (0.5,0.55) -- (0.5,0.15) -- (1.5,0.15) -- (1.5,-0.25) -- (2,-0.25) -- (2,0.15) -- (4,0.15) -- (4,0.55) -- (4.5,0.55) -- (4.5,0.15) -- (7,0.15) -- (7,-0.25) -- (7.5,-0.25) -- (7.5,0.15) -- (10,0.15);
+    \node[font=\scriptsize,blue!70!black] at (9.2,2.23) {整码元保持};
+    \node[font=\scriptsize,red!70!black] at (8.7,0.78) {半码元归零};
+  \end{tikzpicture}
+  \caption{DA0 与 DA1 输出波形关系}
+  \label{fig:dac_waveform}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{实物连线图.png}
+  \caption{实物连接关系}
+  \label{fig:hardware_connection}
+\end{figure}
+
+\section{软硬件实现}
+
+\subsection{HDB3 编码器实现}
+
+FPGA 编码器以批处理方式读取顶层缓存中的 bit 数据。模块内部维护连续零计数、当前 AMI 极性以及自上一次破坏脉冲以来普通 1 的奇偶状态。输入 bit 为 1 时，编码器按 AMI 规则输出普通正脉冲或普通负脉冲，并翻转下一次普通脉冲极性；输入 bit 为 0 时，编码器累加连续零个数。当连续零个数达到 4 时，根据奇偶状态输出 \texttt{B00V} 或 \texttt{000V}。
+
+编码结果一方面写入应答缓存，后续通过 UART 返回上位机；另一方面写入 DA0 波形缓存，用于示波器显示。编码模式下，系统还会把编码结果送入译码器完成回环译码，使 DA1 同步输出译码恢复波形。
+
+\subsection{HDB3 译码器实现}
+
+译码器按符号逐项处理输入 HDB3 序列。符号为 \texttt{+1} 或 \texttt{-1} 时输出 bit 1；符号为 \texttt{0}、\texttt{+V}、\texttt{-V}、\texttt{+B} 或 \texttt{-B} 时输出 bit 0。该实现与表 \ref{tab:symbol_definition} 中的符号定义一致，逻辑简单，便于 FPGA 稳定实现。
+
+在译码模式下，上位机输入 HDB3 符号序列，FPGA 将输入符号写入 DA0 缓存，同时将译码输出写入 DA1 缓存和应答缓存。这样示波器可以同时观察“输入 HDB3 波形”和“译码 bit 波形”。
+
+\subsection{主控状态机实现}
+
+顶层状态机负责完成一次命令的完整生命周期。其流程包括等待命令、解析载荷、启动编码或译码、写入 DAC 缓存、启动 DAC 播放和发送 UART 应答。状态机流程如图 \ref{fig:main_fsm} 所示。
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.94\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small]
+    \node[smallblock] (idle) at (0,0) {空闲\\\texttt{M\_IDLE}};
+    \node[smallblock] (encprep) at (2.9,1.00) {编码准备\\\texttt{M\_ENC\_PREP}};
+    \node[smallblock] (encrun) at (5.5,1.00) {编码运行\\\texttt{M\_ENC\_RUN}};
+    \node[smallblock] (encloop) at (8.1,1.00) {回环译码\\\texttt{M\_ENC\_LOOP}};
+    \node[smallblock] (decprep) at (2.9,-0.80) {译码准备\\\texttt{M\_DEC\_PREP}};
+    \node[smallblock] (decrun) at (5.5,-0.80) {译码运行\\\texttt{M\_DEC\_RUN}};
+    \coordinate (merge) at (10.0,0.10);
+    \node[smallblock] (dac) at (11.8,0.10) {启动 DAC\\\texttt{M\_START\_DAC}};
+    \node[smallblock] (write) at (14.4,0.10) {写应答\\\texttt{M\_RESP\_WRITE}};
+    \node[smallblock] (send) at (16.7,0.10) {发送应答\\\texttt{M\_RESP\_SEND}};
+    \node[smallblock] (idle_done) at (19.3,0.10) {回到空闲\\\texttt{M\_IDLE}};
+    \node[smallblock] (err) at (9.6,-2.35) {错误应答\\\texttt{M\_ERR\_SEND}};
+
+    \coordinate (fork) at (1.35,0);
+    \draw[arrow] (idle.east) -- (fork) |- (encprep.west);
+    \draw[arrow] (encprep) -- (encrun);
+    \draw[arrow] (encrun) -- (encloop);
+    \draw[arrow] (encloop.east) -- ++(0.45,0) |- (merge);
+
+    \draw[arrow] (fork) |- (decprep.west);
+    \draw[arrow] (decprep) -- (decrun);
+    \draw[arrow] (decrun.east) -- ++(2.00,0) |- (merge);
+
+    \fill[black!70] (merge) circle (1.2pt);
+    \draw[arrow] (merge) -- (dac.west);
+    \draw[arrow] (dac.east) -- (write.west);
+    \draw[arrow] (write.east) -- (send.west);
+    \draw[arrow] (send.east) -- node[above]{完成} (idle_done.west);
+
+    \draw[returnbus] (idle.south) -- ++(0,-2.30) -- (err.west);
+    \node[font=\scriptsize,anchor=south] at (4.20,-2.28) {帧错误 / 参数错误};
+    \draw[returnbus] (err.east) -- ++(5.20,0) -| (send.south);
+  \end{tikzpicture}
+  }
+  \caption{顶层主控状态机流程}
+  \label{fig:main_fsm}
+\end{figure}
+
+\subsection{关键代码摘录}
+
+为了说明报告中的系统功能确实对应到工程实现，本文选取 FPGA 编码核心、DAC 播放核心和上位机命令发送核心三处代码进行摘录。代码只保留关键路径，完整实现见工程中的 \texttt{hdb3\_encoder.v}、\texttt{dac\_playback.v} 和 \texttt{MainViewModel.cs}。
+
+\begin{lstlisting}[style=VerilogStyle,caption={FPGA HDB3 四连零替换核心},label={lst:encoder_core}]
+// 检测连续四个 0 并生成替换符号
+if (zero_cnt == 2'd3) begin
+    if (pulse_parity == 1'b0) begin
+        // 偶数普通脉冲采用 B00V 替换
+        if (last_pol == 1'b0) begin
+            subst_buf[0] <= SYM_NB;
+            subst_buf[3] <= SYM_NV;
+            ami_pol      <= 1'b0;
+            last_pol     <= 1'b1;
+        end
+        else begin
+            subst_buf[0] <= SYM_PB;
+            subst_buf[3] <= SYM_PV;
+            ami_pol      <= 1'b1;
+            last_pol     <= 1'b0;
+        end
+    end
+    else begin
+        // 奇数普通脉冲采用 000V 替换
+        subst_buf[0] <= SYM_0;
+        subst_buf[3] <= (last_pol == 1'b0) ? SYM_PV : SYM_NV;
+        ami_pol      <= ~last_pol;
+    end
+
+    subst_buf[1] <= SYM_0;
+    subst_buf[2] <= SYM_0;
+    subst_idx    <= 2'd0;
+    zero_cnt     <= 2'd0;
+    pulse_parity <= 1'b0;
+    state        <= S_SUBST;
+end
+\end{lstlisting}
+
+\begin{lstlisting}[style=VerilogStyle,caption={DAC 码元播放与电平映射核心},label={lst:dac_core}]
+// 定义 DAC 输出电平
+localparam [7:0] DAC_ZERO = 8'h80;
+localparam [7:0] DAC_POS  = 8'h00;
+localparam [7:0] DAC_NEG  = 8'hFF;
+
+// 250 个系统时钟翻转一次相位，500 个时钟对应一个码元
+wire half_tick = (sample_cnt == 8'd249);
+
+// 将 HDB3 符号映射到 DA0 电平
+function [7:0] hdb3_symbol_to_dac;
+    input [7:0] sym;
+    begin
+        case (sym)
+            8'h01, 8'h03, 8'h05: hdb3_symbol_to_dac = DAC_POS;
+            8'h02, 8'h04, 8'h06: hdb3_symbol_to_dac = DAC_NEG;
+            default:             hdb3_symbol_to_dac = DAC_ZERO;
+        endcase
+    end
+endfunction
+
+// DA0 输出 HDB3 RZ，DA1 输出译码 NRZ
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        DA0_Data <= DAC_ZERO;
+        DA1_Data <= DAC_ZERO;
+    end
+    else if (sample_cnt == 8'd0) begin
+        DA0_Data <= rz_phase ? DAC_ZERO : hdb3_symbol_to_dac(rd_data0);
+        DA1_Data <= (rd_data1 == 8'h00) ? DAC_ZERO : DAC_POS;
+    end
+end
+\end{lstlisting}
+
+\begin{lstlisting}[style=CSharpStyle,caption={上位机编码命令发送核心},label={lst:pc_send_core}]
+// 提取输入 bit 并生成软件期望结果
+var chars = EncInput.Where(c => c == '0' || c == '1').ToArray();
+var bits = chars.Select(c => c == '1').ToArray();
+byte[] expected = HDB3Codec.Encode(bits);
+
+// 按协议构建编码命令载荷
+int bitCnt = bits.Length;
+byte[] packed = HDB3Codec.PackBits(bits);
+var payload = new byte[2 + packed.Length];
+payload[0] = (byte)(bitCnt & 0xFF);
+payload[1] = (byte)((bitCnt >> 8) & 0xFF);
+Array.Copy(packed, 0, payload, 2, packed.Length);
+
+// 发送 0x01 编码命令并刷新界面期望结果
+_serial.SendCommand(0x01, payload);
+EncExpected.Clear();
+foreach (var symbol in expected)
+{
+    EncExpected.Add(new ObservableSymbol {
+        Value = HDB3Codec.SymbolToString(symbol),
+        IsCorrect = true
+    });
+}
+\end{lstlisting}
+
+\subsection{上位机实现}
+
+上位机采用 C\# WPF 编写，界面分为编码测试区和译码测试区。编码测试区输入二进制序列，显示软件 HDB3 编码结果和 FPGA 返回结果；译码测试区输入 HDB3 符号序列，显示软件译码结果和 FPGA 返回结果。上位机通过颜色和文本状态显示比对是否一致。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{上位机界面.png}
+  \caption{上位机测试界面}
+  \label{fig:pc_interface}
+\end{figure}
+
+软件部分主要包括 \texttt{HDB3Codec.cs}、\texttt{SerialService.cs} 和 \texttt{MainViewModel.cs}。其中 \texttt{HDB3Codec.cs} 实现软件参考编译码算法；\texttt{SerialService.cs} 负责串口收发和帧解析；\texttt{MainViewModel.cs} 负责界面绑定、命令发送和结果比对。
+
+\section{仿真与实测验证}
+
+\subsection{独立仿真工程验证}
+
+图 \ref{fig:rtl_sim} 为独立仿真工程生成的 RTL 结构图。该图来自 ModelSim/Vivado 仿真参考工程，用于说明 HDB3 编码器、译码器与 testbench 的独立仿真结构。它不是最终 Gowin 工程的系统级 RTL 图，因此本文仅将其作为仿真补充材料，不用于说明最终 FPGA 系统模块划分。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{仿真的RTL框图.png}
+  \caption{独立仿真工程 RTL 结构图}
+  \label{fig:rtl_sim}
+\end{figure}
+
+从独立仿真结构可以看出，测试环境主要围绕 HDB3 编码模块、译码模块和测试激励展开，用于检查编码输出和译码恢复是否满足基本逻辑要求。该仿真顶层为 \texttt{hdb3\_top}，由 \texttt{tb\_hdb3} 提供时钟、复位和输入序列。仿真输入序列为 \texttt{1000010000111100}，其中包含四连零、普通 1 和连续 1，便于同时观察 HDB3 替换、极性交替和译码恢复。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{Modelsim仿真图.png}
+  \caption{ModelSim HDB3 编译码波形仿真}
+  \label{fig:modelsim_wave}
+\end{figure}
+
+图 \ref{fig:modelsim_wave} 中各端口的关系如表 \ref{tab:modelsim_ports} 所示。仿真时钟 \texttt{clk} 按半码元周期翻转，顶层内部用 \texttt{phase} 产生 \texttt{bit\_tick}，因此每两个 \texttt{clk} 周期对应一个完整码元。\texttt{data\_in} 是输入的单极性二进制序列；编码器输出的 \texttt{hdb3\_sym\_pos}、\texttt{hdb3\_sym\_neg} 和 \texttt{hdb3\_valid} 表示完整码元的 HDB3 符号，并直接送入译码器；\texttt{hdb3\_pos} 和 \texttt{hdb3\_neg} 则由顶层进行半码元门控，形成便于观察的双极性归零波形。译码输出由 \texttt{data\_out} 和 \texttt{data\_valid} 给出，\texttt{code\_error} 用于标记非法的双线同时有效状态。
+
+\begin{table}[H]
+  \centering
+  \caption{ModelSim 仿真端口说明}
+  \label{tab:modelsim_ports}
+  \begin{tabularx}{\textwidth}{>{\ttfamily}c c X}
+    \toprule
+    端口 & 方向 & 含义 \\
+    \midrule
+    clk & 输入 & 半码元仿真时钟，testbench 中周期为 10 ns \\
+    rst\_n & 输入 & 低有效复位信号 \\
+    data\_in & 输入 & testbench 输入的单极性二进制序列 \\
+    hdb3\_sym\_pos / hdb3\_sym\_neg & 内部观测 & 编码器输出的完整码元极性，送入译码器作为 HDB3 符号输入 \\
+    hdb3\_valid & 内部观测 & HDB3 符号有效信号，用于限定译码器采样时刻 \\
+    hdb3\_pos / hdb3\_neg & 输出观测 & 顶层根据 \texttt{phase} 门控后的归零脉冲波形 \\
+    data\_out & 输出 & 译码器恢复出的二进制 bit \\
+    data\_valid & 输出 & 译码输出有效信号，testbench 据此进行逐 bit 比对 \\
+    code\_error & 输出 & HDB3 双线表示非法时置位 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+从波形结果可以看出，输入序列中的四连零位置会在 HDB3 符号极性波形上产生替换脉冲；归零输出只在码元前半段保持有效，后半段回到零电平；经过译码器流水线延迟后，\texttt{data\_out} 能够按 \texttt{data\_valid} 节奏恢复原始 bit 序列。最终系统正确性仍需结合上位机比对和示波器实测进行判断。
+
+\subsection{编码功能实测}
+
+编码功能测试中，上位机输入二进制序列，先由软件参考算法生成期望 HDB3 符号序列，再通过 UART 将输入发送给 FPGA。FPGA 返回编码结果后，上位机逐符号比较二者是否一致。与此同时，DA0 输出 HDB3 编码波形，DA1 输出回环译码波形。
+
+\begin{table}[H]
+  \centering
+  \caption{编码测试用例}
+  \label{tab:encode_cases}
+  \begin{tabularx}{\textwidth}{c c X}
+    \toprule
+    测试项 & 输入序列 & 验证重点 \\
+    \midrule
+    全 0 测试 & \texttt{0000000000000000} & 连续四零替换和译码恢复为 0 \\
+    全 1 测试 & \texttt{1111111111111111} & AMI 正负脉冲交替 \\
+    10 交替测试 & \texttt{1010101010101010} & 普通 1 的交替脉冲和 0 的间隔 \\
+    典型序列测试 & \texttt{1000010000111100} & 普通脉冲、四连零替换和连续 1 综合验证 \\
+    长 0 测试 & \texttt{1100000000110000} & 多组四连零替换 \\
+    编码随机测试 & \texttt{10111000010000001} & 一般序列下的软件与 FPGA 一致性 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{全 0 序列测试}
+
+全 0 序列中没有普通 1，如果采用普通 AMI 码会长时间保持零电平。HDB3 编码会周期性插入替换脉冲，从而避免长连零。图 \ref{fig:all_zero_test} 中，上位机显示 FPGA 返回结果与软件参考结果一致；示波器上 DA0 出现替换脉冲，DA1 保持低电平，说明译码结果恢复为 0。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{全0测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{全0测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{全 0 序列测试结果}
+  \label{fig:all_zero_test}
+\end{figure}
+
+\subsubsection{全 1 序列测试}
+
+全 1 序列不触发四连零替换，主要验证 AMI 极性交替规则。图 \ref{fig:all_one_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 呈现连续正负交替脉冲，DA1 保持高电平，符合全 1 序列译码结果。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{全1测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{全1测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{全 1 序列测试结果}
+  \label{fig:all_one_test}
+\end{figure}
+
+\subsubsection{10 交替序列测试}
+
+10 交替序列用于验证普通 1 的正负交替和 0 的零电平间隔。该序列不产生四连零替换，因此 DA0 中应当表现为间隔出现的正负脉冲，DA1 中应当表现为 1、0 交替的 NRZ 波形。测试结果如图 \ref{fig:alternate_test} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{10交替测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{10交替测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{10 交替序列测试结果}
+  \label{fig:alternate_test}
+\end{figure}
+
+\subsubsection{典型混合序列测试}
+
+典型混合序列同时包含普通 1、连续 0 和连续 1，是最能综合体现 HDB3 编码规则的测试用例。图 \ref{fig:mixed_test} 中，上位机比对结果一致；示波器波形中既能观察到 AMI 正负交替，也能观察到四连零替换产生的脉冲，DA1 能够恢复原始输入节奏。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{典型序列测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{典型序列测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{典型混合序列测试结果}
+  \label{fig:mixed_test}
+\end{figure}
+
+\subsubsection{长 0 序列测试}
+
+长 0 序列用于验证多组连续四零替换。图 \ref{fig:long_zero_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 能看到多组替换脉冲，说明 HDB3 编码有效抑制了长连零。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{长0序列测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{长0序列测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{长 0 序列测试结果}
+  \label{fig:long_zero_test}
+\end{figure}
+
+\subsubsection{编码随机序列测试}
+
+随机序列测试用于验证系统在一般输入条件下的稳定性。本次实测输入序列为 \texttt{10111000010000001}。图 \ref{fig:encode_random_test} 中，上位机软件结果和 FPGA 返回结果一致，示波器波形也能与输入序列节奏对应，说明编码链路、UART 返回和 DAC 输出均工作正常。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{编码随机测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{编码随机测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{编码随机序列测试结果}
+  \label{fig:encode_random_test}
+\end{figure}
+
+\subsection{译码功能实测}
+
+译码测试中，上位机输入 HDB3 符号序列，软件参考算法先得到期望 bit 序列，然后 FPGA 对相同符号序列进行译码并返回 bit 结果。上位机逐 bit 比对软件期望和 FPGA 返回值。图 \ref{fig:decode_import} 展示了由编码结果导入译码区的操作方式。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{译码可直接导入-以全1为例.png}
+  \caption{编码结果导入译码区示例}
+  \label{fig:decode_import}
+\end{figure}
+
+随机译码测试采用的实际输入和期望输出如表 \ref{tab:decode_random_case} 所示。该序列包含普通正负脉冲、补信脉冲和破坏脉冲，可用于检查译码器对不同 HDB3 符号的映射是否一致。
+
+\begin{table}[H]
+  \centering
+  \caption{随机译码实测序列}
+  \label{tab:decode_random_case}
+  \begin{tabularx}{\textwidth}{c>{\ttfamily\raggedright\arraybackslash}X}
+    \toprule
+    项目 & 序列 \\
+    \midrule
+    输入 HDB3 符号 & +1 0 0 -1 +B 0 0 +V -1 0 0 0 -V 0 0 +1 -1 0 \\
+    期望 bit 输出 & 100100001000000110 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+随机译码测试结果如图 \ref{fig:decode_random_test} 所示。上位机结果表明 FPGA 译码输出与软件参考一致；示波器中 DA0 显示输入 HDB3 符号波形，DA1 显示译码后的 NRZ bit 波形，两路波形在码元边界上保持同步。
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{解码随机测试-上位机.png}
+    \caption{上位机比对结果}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{解码随机测试-FPGA.jpg}
+    \caption{示波器波形}
+  \end{subfigure}
+  \caption{解码随机序列测试结果}
+  \label{fig:decode_random_test}
+\end{figure}
+
+\subsection{测试结果汇总}
+
+各组测试结果如表 \ref{tab:test_summary} 所示。可以看出，不同类型输入下，上位机软件结果与 FPGA 返回结果均保持一致，示波器波形也符合对应测试工况的预期。
+
+\begin{table}[H]
+  \centering
+  \caption{测试结果汇总}
+  \label{tab:test_summary}
+  \begin{tabularx}{\textwidth}{cX X c}
+    \toprule
+    测试项目 & 上位机比对 & 示波器观察 & 结论 \\
+    \midrule
+    全 0 编码 & 软件结果与 FPGA 返回一致 & DA0 出现替换脉冲，DA1 为低电平 & 通过 \\
+    全 1 编码 & 软件结果与 FPGA 返回一致 & DA0 正负交替，DA1 为高电平 & 通过 \\
+    10 交替编码 & 软件结果与 FPGA 返回一致 & DA0 间隔脉冲，DA1 交替输出 & 通过 \\
+    典型序列编码 & 软件结果与 FPGA 返回一致 & 普通脉冲和替换脉冲均可观察 & 通过 \\
+    长 0 编码 & 软件结果与 FPGA 返回一致 & 多组替换脉冲明显 & 通过 \\
+    编码随机测试 & 软件结果与 FPGA 返回一致 & 波形节奏与输入相符 & 通过 \\
+    解码随机测试 & 软件结果与 FPGA 返回一致 & DA1 恢复译码 bit & 通过 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+本实验没有搭建随机噪声信道，因此不绘制传统误码率曲线。验证方式采用固定序列和随机序列的逐 bit、逐符号比对。在当前测试范围内，软件参考结果与 FPGA 返回结果一致，实测误码数为 0。
+
+\section{问题分析与改进}
+
+\subsection{仿真工程与最终系统的区别}
+
+独立仿真工程能够观察 HDB3 编码和译码逻辑，但它不包含最终系统中的 UART 协议、上位机交互和 DAC 播放结构。因此，本文没有把独立仿真 RTL 图作为最终 FPGA 模块框图，而是单独放在仿真验证部分。最终系统正确性主要依据上位机比对和示波器实测结果。
+
+\subsection{四连零替换规则的统一}
+
+HDB3 规则在教材中常以破坏脉冲和补信脉冲的直观作用进行讲解，而工程实现中更适合采用奇偶法直接判断 \texttt{B00V} 或 \texttt{000V}。为保证软硬件结果一致，本设计以上位机 \texttt{HDB3Codec.cs} 和 FPGA \texttt{hdb3\_encoder.v} 中采用的奇偶法为统一依据。
+
+\subsection{DA0 与 DA1 波形差异}
+
+示波器上 DA0 与 DA1 的波形宽度不同，这是由输出形式决定的。DA0 是 HDB3 双极性归零波形，脉冲只占据半个码元；DA1 是译码 bit 的 NRZ 波形，一个 bit 保持完整码元。因此判断波形时应关注码元边界和译码结果，而不是要求两路波形形状完全相同。
+
+\section{总结}
+
+本文完成了一套基于 FPGA 的 HDB3 编译码器系统。系统实现了二进制序列到 HDB3 符号序列的编码、HDB3 符号序列到二进制序列的译码、上位机串口控制、FPGA 应答返回和双通道 DAC 波形输出。与单纯软件仿真相比，本设计能够同时给出软件参考结果、FPGA 实际返回结果和示波器实测波形，验证链路更加完整。
+
+实验结果表明，在全 0、全 1、10 交替、典型混合、长 0、编码随机和解码随机等工况下，上位机软件参考结果与 FPGA 返回结果一致；示波器能够观察到 HDB3 码的正负交替脉冲、四连零替换脉冲和译码恢复波形。由此说明 FPGA 编译码逻辑、UART 通信和 DAC 输出均达到设计要求。
+
+后续可进一步扩展序列长度，补充覆盖最终 Gowin 顶层的系统级 testbench，并增加更长时间随机序列测试和异常帧处理测试，使系统验证更加充分。
+
+\end{document}

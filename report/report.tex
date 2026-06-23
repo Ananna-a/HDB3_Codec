@@ -771,7 +771,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\textwidth]{仿真的RTL框图.png}
+  \includegraphics[width=0.95\textwidth]{仿真的RTL框图.png}
   \caption{独立仿真工程 RTL 结构图}
   \label{fig:rtl_sim}
 \end{figure}
@@ -800,7 +800,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
     data\_in & 输入 & testbench 输入的单极性二进制序列 \\
     hdb3\_sym\_pos / hdb3\_sym\_neg & 内部观测 & 编码器输出的完整码元极性，送入译码器作为 HDB3 符号输入 \\
     hdb3\_valid & 内部观测 & HDB3 符号有效信号，用于限定译码器采样时刻 \\
-    hdb3\_pos / hdb3\_neg & 输出观测 & 顶层根据 \texttt{phase} 门控后的归零脉冲波形 \\
+    hdb3\_pos / hdb3\_neg & 输出观测 & 顶层根据\texttt{phase}门控后的RZ脉冲 \\
     data\_out & 输出 & 译码器恢复出的二进制 bit \\
     data\_valid & 输出 & 译码输出有效信号，testbench 据此进行逐 bit 比对 \\
     code\_error & 输出 & HDB3 双线表示非法时置位 \\
@@ -834,11 +834,11 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \subsubsection{全 0 序列测试}
 
-全 0 序列中没有普通 1，如果采用普通 AMI 码会长时间保持零电平。HDB3 编码会周期性插入替换脉冲，从而避免长连零。图 \ref{fig:all_zero_test} 中，上位机显示 FPGA 返回结果与软件参考结果一致；示波器上 DA0 出现替换脉冲，DA1 保持低电平，说明译码结果恢复为 0。
+全 0 序列(0000000000000000)中没有普通 1，如果采用普通 AMI 码会长时间保持零电平。HDB3 编码会周期性插入替换脉冲，从而避免长连零。图 \ref{fig:all_zero_test} 中，上位机显示 FPGA 返回结果与软件参考结果一致；示波器上 DA0 出现替换脉冲，DA1 保持低电平，说明译码结果恢复为 0。
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.48\textwidth}
+  \begin{subfigure}{0.50\textwidth}
     \centering
     \includegraphics[width=\linewidth]{全0测试-上位机.png}
     \caption{上位机比对结果}
@@ -855,11 +855,11 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \subsubsection{全 1 序列测试}
 
-全 1 序列不触发四连零替换，主要验证 AMI 极性交替规则。图 \ref{fig:all_one_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 呈现连续正负交替脉冲，DA1 保持高电平，符合全 1 序列译码结果。
+全 1 序列(1111111111111111)不触发四连零替换，主要验证 AMI 极性交替规则。图 \ref{fig:all_one_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 呈现连续正负交替脉冲，DA1 保持高电平，符合全 1 序列译码结果。
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.48\textwidth}
+  \begin{subfigure}{0.50\textwidth}
     \centering
     \includegraphics[width=\linewidth]{全1测试-上位机.png}
     \caption{上位机比对结果}
@@ -874,13 +874,14 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
   \label{fig:all_one_test}
 \end{figure}
 
+\newpage
 \subsubsection{10 交替序列测试}
 
-10 交替序列用于验证普通 1 的正负交替和 0 的零电平间隔。该序列不产生四连零替换，因此 DA0 中应当表现为间隔出现的正负脉冲，DA1 中应当表现为 1、0 交替的 NRZ 波形。测试结果如图 \ref{fig:alternate_test} 所示。
+10 交替序列(1010101010101010)用于验证普通 1 的正负交替和 0 的零电平间隔。该序列不产生四连零替换，因此 DA0 中应当表现为间隔出现的正负脉冲，DA1 中应当表现为 1、0 交替的 NRZ 波形。测试结果如图 \ref{fig:alternate_test} 所示。
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.48\textwidth}
+  \begin{subfigure}{0.49\textwidth}
     \centering
     \includegraphics[width=\linewidth]{10交替测试-上位机.png}
     \caption{上位机比对结果}
@@ -897,11 +898,11 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \subsubsection{典型混合序列测试}
 
-典型混合序列同时包含普通 1、连续 0 和连续 1，是最能综合体现 HDB3 编码规则的测试用例。图 \ref{fig:mixed_test} 中，上位机比对结果一致；示波器波形中既能观察到 AMI 正负交替，也能观察到四连零替换产生的脉冲，DA1 能够恢复原始输入节奏。
+典型混合序列(1000010000111100)同时包含普通 1、连续 0 和连续 1，是最能综合体现 HDB3 编码规则的测试用例。图 \ref{fig:mixed_test} 中，上位机比对结果一致；示波器波形中既能观察到 AMI 正负交替，也能观察到四连零替换产生的脉冲，DA1 能够恢复原始输入节奏。
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.48\textwidth}
+  \begin{subfigure}{0.49\textwidth}
     \centering
     \includegraphics[width=\linewidth]{典型序列测试-上位机.png}
     \caption{上位机比对结果}
@@ -916,13 +917,14 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
   \label{fig:mixed_test}
 \end{figure}
 
+\newpage
 \subsubsection{长 0 序列测试}
 
-长 0 序列用于验证多组连续四零替换。图 \ref{fig:long_zero_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 能看到多组替换脉冲，说明 HDB3 编码有效抑制了长连零。
+长 0 序列(1100000000110000)用于验证多组连续四零替换。图 \ref{fig:long_zero_test} 中，FPGA 返回结果与软件参考一致；示波器上 DA0 能看到多组替换脉冲，说明 HDB3 编码有效抑制了长连零。
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.48\textwidth}
+  \begin{subfigure}{0.49\textwidth}
     \centering
     \includegraphics[width=\linewidth]{长0序列测试-上位机.png}
     \caption{上位机比对结果}
@@ -958,13 +960,14 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
   \label{fig:encode_random_test}
 \end{figure}
 
+\newpage
 \subsection{译码功能实测}
 
 译码测试中，上位机输入 HDB3 符号序列，软件参考算法先得到期望 bit 序列，然后 FPGA 对相同符号序列进行译码并返回 bit 结果。上位机逐 bit 比对软件期望和 FPGA 返回值。图 \ref{fig:decode_import} 展示了由编码结果导入译码区的操作方式。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\textwidth]{译码可直接导入-以全1为例.png}
+  \includegraphics[width=0.90\textwidth]{译码可直接导入-以全1为例.png}
   \caption{编码结果导入译码区示例}
   \label{fig:decode_import}
 \end{figure}
@@ -1016,10 +1019,10 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
     \toprule
     测试项目 & 上位机比对 & 示波器观察 & 结论 \\
     \midrule
-    全 0 编码 & 软件结果与 FPGA 返回一致 & DA0 出现替换脉冲，DA1 为低电平 & 通过 \\
-    全 1 编码 & 软件结果与 FPGA 返回一致 & DA0 正负交替，DA1 为高电平 & 通过 \\
-    10 交替编码 & 软件结果与 FPGA 返回一致 & DA0 间隔脉冲，DA1 交替输出 & 通过 \\
-    典型序列编码 & 软件结果与 FPGA 返回一致 & 普通脉冲和替换脉冲均可观察 & 通过 \\
+    全 0 编码 & 软件结果与 FPGA 返回一致 & DA0替换脉冲，DA1为低 & 通过 \\
+    全 1 编码 & 软件结果与 FPGA 返回一致 & DA0正负交替，DA1为高 & 通过 \\
+    10 交替编码 & 软件结果与 FPGA 返回一致 & DA0间隔脉冲，DA1交替 & 通过 \\
+    典型序列编码 & 软件结果与 FPGA 返回一致 & 普通和替换脉冲均可观察 & 通过 \\
     长 0 编码 & 软件结果与 FPGA 返回一致 & 多组替换脉冲明显 & 通过 \\
     编码随机测试 & 软件结果与 FPGA 返回一致 & 波形节奏与输入相符 & 通过 \\
     解码随机测试 & 软件结果与 FPGA 返回一致 & DA1 恢复译码 bit & 通过 \\
@@ -1029,6 +1032,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 本实验没有搭建随机噪声信道，因此不绘制传统误码率曲线。验证方式采用固定序列和随机序列的逐 bit、逐符号比对。在当前测试范围内，软件参考结果与 FPGA 返回结果一致，实测误码数为 0。
 
+\newpage
 \section{问题分析与改进}
 
 \subsection{仿真工程与最终系统的区别}
@@ -1041,7 +1045,7 @@ RTL 结构框图由 Vivado 综合后自动绘制，展示了顶层模块 \texttt
 
 \subsection{四连零替换规则的统一}
 
-HDB3 规则在不同教材中描述方式差异较大。常见的一种叙述是：首次遇到四连零时固定采用 \texttt{000V}，后续则根据两次替换组之间的 1 个数奇偶性判断；另一种叙述（本设计采用的奇偶法）则是统一按自上一次破坏脉冲以来普通 1 的奇偶个数判断，初始奇偶状态为偶数。
+HDB3 规则在不同教材中描述方式差异较大。常见的一种叙述是：首次遇到四连零时固定采用 \texttt{000V}，V的极性与前一个1的极性相同，后续则根据两次替换组之间的 1 个数奇偶性判断；另一种叙述（本设计采用的奇偶法）则是统一按自上一次破坏脉冲以来普通 1 的奇偶个数判断，初始奇偶状态为偶数。
 
 两种规定在多数序列下输出相同，但在全零序列的首个替换组上存在差异：按"首次固定 \texttt{000V}"的规定，全零序列的首个替换组为 \texttt{000V}，首组之后若两个普通 1 的奇偶计数为偶数则使用 \texttt{B00V}；而按奇偶法，初始状态为偶数，全零序列的首个替换组直接采用 \texttt{B00V}。这是教材规定与产业工程实现之间的一个已知变体，不属于实现错误。
 
@@ -1078,12 +1082,6 @@ end
 复位后读数据初始值未知。但 DAC 播放模块在上层通过播放标志和等待计数器控制输出时序，在数据有效前将两路输出强制置为中点电平，因此读端初始不定态不影响实际输出。
 
 此外，\texttt{hdb3\_top.v} 中的 \texttt{payload\_buf[0:63]} 和 \texttt{sym\_buf[0:63]}（各 $64 \times 8$ bit）规模有限，即使推断为分布式 RAM 也不会造成明显瓶颈，但仍采用同步时序写法以保证代码风格的一致性。
-
-\subsection{DA0 与 DA1 波形差异}
-
-示波器上 DA0 与 DA1 的波形在宽度和形状上不同，这是在两个层次上有意做出的区分。从信号含义层看，DA0 承载的是 HDB3 编码后的符号序列（包含正负普通脉冲、破坏脉冲和补信脉冲），DA1 承载的是译码恢复后的二进制 bit 序列。从输出形式层看，DA0 采用双极性归零（RZ）格式——正电平表示正符号、负电平表示负符号、零电平表示零符号，每个脉冲仅占据半个码元以清晰区分相邻符号；DA1 采用单极性不归零（NRZ）格式——高电平表示 bit 1、零电平表示 bit 0，每个 bit 保持完整码元以与原始数字信号形式一致。
-
-两路波形的差异恰恰体现了 HDB3 编译码前后的信号变换：DA0 展示编码如何用正负脉冲和替换脉冲表示原始数据，DA1 展示译码如何将编码符号恢复为原始二进制形式。因此，观察波形时应关注码元边界对齐和译码结果的正确性，而不是要求两路波形形状相同。
 
 \section{总结}
 
